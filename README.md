@@ -51,7 +51,14 @@ packages are consumed through typed wrappers.
 
 ```bash
 npm install        # postinstall patches a mis-packaged transitive dep
-npm run spike:repl # evaluate a demo pattern and play ~4s of audio
+npm run dev        # launch the TUI — Ctrl+E to play, Ctrl+. hush, Ctrl+Q quit
+```
+
+Put it on your PATH so you can just type `lyra`:
+
+```bash
+ln -s "$PWD/bin/lyra.mjs" ~/.local/bin/lyra   # or: npm link
+lyra
 ```
 
 Other smoke tests:

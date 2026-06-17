@@ -7,6 +7,9 @@
   "engines": {
     "node": ">=22"
   },
+  "bin": {
+    "lyra": "bin/lyra.mjs"
+  },
   "scripts": {
     "spike": "tsx src/spike/oscillator.ts",
     "spike:superdough": "tsx src/spike/superdough.ts",
