@@ -3,8 +3,8 @@
  *
  * Owns the text buffer, handles editing/navigation keys, and renders the buffer
  * with a line-number gutter and an inverse-video cursor. Action keys (eval,
- * hush, quit) are handled here and forwarded to the parent, since this is the
- * focused component that receives keyboard input.
+ * toggle transport, quit) are handled here and forwarded to the parent, since
+ * this is the focused component that receives keyboard input.
  */
 import React, { useReducer, useRef } from 'react';
 import { Box, Text, useInput } from 'ink';
@@ -13,11 +13,17 @@ import { bufferText, createBuffer, reduce, type Buffer, type EditAction } from '
 export interface EditorProps {
   initialCode: string;
   onEvaluate: (code: string) => void;
-  onHush: () => void;
+  onToggle: () => void;
   onQuit: () => void;
 }
 
-export function Editor({ initialCode, onEvaluate, onHush, onQuit }: EditorProps): React.ReactElement {
+/** Ctrl+Space: most terminals send a NUL byte; some send space + ctrl modifier. */
+function isCtrlSpace(input: string, ctrl: boolean): boolean {
+  if (input.length === 1 && input.charCodeAt(0) === 0) return true; // NUL byte
+  return ctrl && input === ' ';
+}
+
+export function Editor({ initialCode, onEvaluate, onToggle, onQuit }: EditorProps): React.ReactElement {
   const [buf, dispatch] = useReducer(
     (state: Buffer, action: EditAction) => reduce(state, action),
     initialCode,
@@ -31,12 +37,14 @@ export function Editor({ initialCode, onEvaluate, onHush, onQuit }: EditorProps)
 
   useInput((input, key) => {
     // --- action chords ---
-    if (key.ctrl && (input === 'e' || key.return)) {
-      onEvaluate(bufferText(bufRef.current));
+    // A plain space (input === ' ', key.ctrl === false) is NOT a chord and
+    // falls through to insertion below.
+    if (isCtrlSpace(input, key.ctrl)) {
+      onToggle();
       return;
     }
-    if (key.ctrl && input === '.') {
-      onHush();
+    if (key.ctrl && (input === 'e' || key.return)) {
+      onEvaluate(bufferText(bufRef.current));
       return;
     }
     if (key.ctrl && input === 'q') {

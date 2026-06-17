@@ -22,8 +22,8 @@ if (args.includes('--help') || args.includes('-h')) {
       '',
       'usage: lyra',
       '',
-      '  Ctrl+E  evaluate / play      Ctrl+.  hush (stop)',
-      '  Ctrl+Q  quit                 arrows  move cursor',
+      '  Ctrl+E      evaluate / update     Ctrl+Space  play / stop',
+      '  Ctrl+Q      quit                  arrows      move cursor',
     ].join('\n'),
   );
   process.exit(0);

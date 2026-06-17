@@ -20,7 +20,7 @@ const checks: Record<string, boolean> = {
   transport: frame.includes('stopped') || frame.includes('playing'),
   gutter: frame.includes(' 1 '),
   defaultCode: frame.includes('sawtooth'),
-  hints: frame.includes('eval') && frame.includes('hush') && frame.includes('quit'),
+  hints: frame.includes('eval') && frame.includes('play/stop') && frame.includes('quit'),
 };
 console.log('checks:', JSON.stringify(checks));
 

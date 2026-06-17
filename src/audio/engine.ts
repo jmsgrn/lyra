@@ -80,9 +80,15 @@ export function getContext(): NodeAudioContext {
   return ctx;
 }
 
-/** Current audio-clock time, in seconds. This is the time base the scheduler uses. */
+/**
+ * Current audio-clock time, in seconds — the time base the scheduler uses.
+ *
+ * Deliberately does NOT throw: the Strudel Cyclist calls this from a timer, and
+ * a tick can fire during teardown after the context is gone. Returning 0 there
+ * is harmless and avoids crashing the process on exit.
+ */
 export function now(): number {
-  return getContext().currentTime;
+  return ctx ? ctx.currentTime : 0;
 }
 
 /**
@@ -103,6 +109,7 @@ export function trigger(
   cps = 1,
   targetTime?: number,
 ): void {
+  if (!ctx) return; // engine torn down (e.g. during exit); drop the event
   const value = (hap as { value?: SoundParams }).value ?? (hap as SoundParams);
   const when = targetTime ?? now() + deadline;
   try {

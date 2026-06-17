@@ -25,7 +25,7 @@ export function App(): React.ReactElement {
       <Editor
         initialCode={DEFAULT_CODE}
         onEvaluate={repl.evaluate}
-        onHush={repl.hush}
+        onToggle={repl.toggle}
         onQuit={exit}
       />
       <Footer status={repl.status} error={error} />
@@ -70,7 +70,7 @@ function Footer({ status, error }: { status: string; error: unknown }): React.Re
         {errText ? <Text color="red">⚠ {errText}</Text> : <Text dimColor>{status}</Text>}
       </Text>
       <Text dimColor>
-        <Text color="cyan">Ctrl+E</Text> eval · <Text color="cyan">Ctrl+.</Text> hush ·{' '}
+        <Text color="cyan">Ctrl+E</Text> eval · <Text color="cyan">Ctrl+Space</Text> play/stop ·{' '}
         <Text color="cyan">Ctrl+Q</Text> quit · <Text color="cyan">↑↓←→</Text> move
       </Text>
     </Box>

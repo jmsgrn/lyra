@@ -21,6 +21,8 @@ export interface ReplApi {
   /** current cycle position (best-effort) */
   cycle: number;
   evaluate: (code: string) => void;
+  /** start/stop the transport */
+  toggle: () => void;
   hush: () => void;
   setCps: (cps: number) => void;
 }
@@ -52,6 +54,13 @@ export function useRepl(): ReplApi {
       });
     return () => {
       mounted = false;
+      // Stop the Cyclist timer before tearing down the audio context so a
+      // pending tick can't call into a closed engine.
+      try {
+        replRef.current?.stop();
+      } catch {
+        /* ignore */
+      }
       void closeEngine();
     };
   }, []);
@@ -82,9 +91,17 @@ export function useRepl(): ReplApi {
       .catch((err) => setStatus(`eval error: ${msg(err)}`));
   }, []);
 
+  const toggle = useCallback(() => {
+    const repl = replRef.current;
+    if (!repl) return;
+    repl.toggle();
+    const started = repl.state?.started === true;
+    setStatus(started ? 'playing' : 'stopped');
+  }, []);
+
   const hush = useCallback(() => {
     replRef.current?.stop();
-    setStatus('hushed');
+    setStatus('stopped');
   }, []);
 
   const setCps = useCallback((value: number) => {
@@ -92,5 +109,5 @@ export function useRepl(): ReplApi {
     setCpsState(value);
   }, []);
 
-  return { phase, status, state, cps, cycle, evaluate, hush, setCps };
+  return { phase, status, state, cps, cycle, evaluate, toggle, hush, setCps };
 }
