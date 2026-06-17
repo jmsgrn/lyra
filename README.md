@@ -68,7 +68,7 @@ Other smoke tests:
 
 - [x] Headless audio: superdough on node-web-audio-api
 - [x] Strudel pattern engine + Cyclist scheduler wired to audio
-- [ ] Ink TUI: editor pane, eval/transport keybindings, live status
+- [x] Ink TUI: editor pane, eval/transport keybindings, live status
 - [ ] Default sound library (drum machines + sample packs)
 - [ ] Audio sampling: load sample folders + record from mic/line input
 - [ ] Latency/buffer tuning (eliminate xruns)

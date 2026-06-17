@@ -12,7 +12,8 @@
     "spike:superdough": "tsx src/spike/superdough.ts",
     "spike:strudel": "tsx src/spike/strudel.ts",
     "spike:repl": "tsx src/spike/repl.ts",
-    "dev": "tsx watch src/main.ts",
+    "start": "node scripts/run.mjs tsx src/main.tsx",
+    "dev": "node scripts/run.mjs tsx watch src/main.tsx",
     "typecheck": "tsc --noEmit",
     "postinstall": "node scripts/fix-deps.mjs"
   },
@@ -20,11 +21,15 @@
     "@strudel/core": "^1.1.0",
     "@strudel/mini": "^1.1.0",
     "@strudel/transpiler": "^1.1.0",
+    "ink": "^7.1.0",
     "node-web-audio-api": "^1.0.4",
+    "react": "^19.2.7",
     "superdough": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/react": "^19.2.17",
+    "ink-testing-library": "^4.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
   }
