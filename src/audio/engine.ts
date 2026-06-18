@@ -58,10 +58,10 @@ export async function initEngine(opts: EngineOptions = {}): Promise<void> {
   sdAny.setDefaultAudioContext?.(ctx);
 
   try {
-    await sd.initAudio();
-    workletsEnabled = true;
+    await sd.initAudio({ disableWorklets: !settings.audio.worklets });
+    workletsEnabled = settings.audio.worklets;
   } catch {
-    await sd.initAudio({ disableWorklets: true } as Parameters<typeof sd.initAudio>[0]);
+    await sd.initAudio({ disableWorklets: true });
     workletsEnabled = false;
   }
 

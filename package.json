@@ -11,10 +11,10 @@
     "lyra": "bin/lyra.mjs"
   },
   "scripts": {
-    "spike": "tsx src/spike/oscillator.ts",
-    "spike:superdough": "tsx src/spike/superdough.ts",
-    "spike:strudel": "tsx src/spike/strudel.ts",
-    "spike:repl": "tsx src/spike/repl.ts",
+    "spike": "node scripts/run.mjs tsx src/spike/oscillator.ts",
+    "spike:superdough": "node scripts/run.mjs tsx src/spike/superdough.ts",
+    "spike:strudel": "node scripts/run.mjs tsx src/spike/strudel.ts",
+    "spike:repl": "node scripts/run.mjs tsx src/spike/repl.ts",
     "spike:samples": "node scripts/run.mjs tsx src/spike/samples.ts",
     "spike:rec": "node scripts/run.mjs tsx src/spike/rec.ts",
     "start": "node scripts/run.mjs tsx src/main.tsx",

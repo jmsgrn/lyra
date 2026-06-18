@@ -4,9 +4,9 @@
  * over the defaults. Missing file = defaults; a malformed file falls back to
  * defaults and records `settingsError` for the UI to surface.
  */
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 export interface ThemeSettings {
   header: string;
@@ -29,6 +29,11 @@ export interface AudioSettings {
    * Bigger = cleaner but more latency. "" leaves it to the system.
    */
   pipewireLatency: string;
+  /**
+   * Enable superdough's AudioWorklet DSP. Worklets add some FX but run JS per
+   * audio block; if that causes crackle, set false to use native nodes only.
+   */
+  worklets: boolean;
 }
 
 export interface Settings {
@@ -53,7 +58,7 @@ export const DEFAULT_SETTINGS: Settings = {
     error: 'red',
   },
   tempo: { cps: 0.5 },
-  audio: { latencyHint: 'playback', pipewireLatency: '1024/48000' },
+  audio: { latencyHint: 'playback', pipewireLatency: '1024/48000', worklets: true },
   samples: [],
 };
 
@@ -85,7 +90,17 @@ function load(): Settings {
     return deepMerge(DEFAULT_SETTINGS, parsed);
   } catch (err) {
     const e = err as NodeJS.ErrnoException;
-    if (e.code !== 'ENOENT') settingsError = `settings.json: ${e.message}`;
+    if (e.code === 'ENOENT') {
+      // First run: write a defaults file so it's discoverable and editable.
+      try {
+        mkdirSync(dirname(settingsPath), { recursive: true });
+        writeFileSync(settingsPath, `${JSON.stringify(DEFAULT_SETTINGS, null, 2)}\n`);
+      } catch {
+        /* read-only home etc. — fall back to in-memory defaults */
+      }
+    } else {
+      settingsError = `settings.json: ${e.message}`;
+    }
     return DEFAULT_SETTINGS;
   }
 }
