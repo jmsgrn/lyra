@@ -21,6 +21,8 @@
     "spike:electron:test": "node spike/electron/run.mjs --autotest",
     "start": "node scripts/run.mjs tsx src/main.tsx",
     "dev": "node scripts/run.mjs tsx watch src/main.tsx",
+    "gui": "node scripts/gui.mjs",
+    "build:renderer": "vite build --config src/renderer/vite.config.ts",
     "typecheck": "tsc --noEmit",
     "postinstall": "node scripts/fix-deps.mjs"
   },
@@ -31,12 +33,14 @@
     "ink": "^7.1.0",
     "node-web-audio-api": "^1.0.4",
     "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "superdough": "^1.1.0"
   },
   "devDependencies": {
     "@codemirror/lang-javascript": "^6.2.5",
     "@types/node": "^22.10.0",
     "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "codemirror": "^6.0.2",
     "electron": "^42.4.1",
     "ink-testing-library": "^4.0.0",

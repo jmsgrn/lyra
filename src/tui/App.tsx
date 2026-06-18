@@ -16,7 +16,7 @@ import { Editor } from './Editor.js';
 import { CommandBar } from './CommandBar.js';
 import { useRepl } from './useRepl.js';
 import { useTerminalSize } from './useTerminalSize.js';
-import { runCommand, type CommandContext } from './commands.js';
+import { runCommand, type CommandContext } from '../shared/commands.js';
 import { LOGO } from './logo.js';
 import { theme } from './theme.js';
 import { settingsError, settingsPath } from '../config/settings.js';

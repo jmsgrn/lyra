@@ -1,0 +1,84 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b0b10;
+  --panel: #0e0e15;
+  --border: #23232e;
+  --border-active: #2f6f6f;
+  --text: #cdd0d6;
+  --muted: #6f7480;
+  --header: #d98a5b;
+  --command: #d9b35b;
+  --playing: #7bd97b;
+  --stopped: #6f7480;
+  --error: #e07b7b;
+  --key: #6fd9d9;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, "Cascadia Code", monospace;
+  overflow: hidden;
+}
+
+.app { display: flex; flex-direction: column; height: 100%; }
+
+/* header */
+.header {
+  border: 1px solid var(--header);
+  border-radius: 8px;
+  margin: 8px 8px 0;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--header);
+}
+.header .title { font-weight: 600; letter-spacing: .3px; }
+.header .title .file { color: var(--text); font-weight: 400; }
+.header .title .dirty { color: var(--command); }
+.header .right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.header .transport.playing { color: var(--playing); }
+.header .transport.stopped { color: var(--stopped); }
+.header .clock { color: var(--muted); font-size: 12px; }
+.header .hints { color: var(--muted); font-size: 11px; }
+.header .hints b { color: var(--key); font-weight: 600; }
+
+/* editor */
+.editor-wrap {
+  flex: 1;
+  min-height: 0;
+  margin: 8px;
+  border: 1px solid var(--border-active);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.cm-editor { height: 100%; }
+.cm-editor.cm-focused { outline: none; }
+.cm-scroller { font-family: inherit; }
+
+/* command / status bar */
+.cmdbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 8px 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.cmdbar.active { border-color: var(--command); }
+.cmdbar .prompt { color: var(--command); }
+.cmdbar input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font: inherit;
+}
+.cmdbar input::placeholder { color: var(--muted); }
+.cmdbar .msg { color: var(--muted); }
+.cmdbar .msg.error { color: var(--error); }
