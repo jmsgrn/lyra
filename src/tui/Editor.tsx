@@ -2,9 +2,9 @@
  * Multi-line code editor pane.
  *
  * Owns the text buffer, handles editing/navigation keys, and renders the buffer
- * with a line-number gutter and an inverse-video cursor. Action keys (eval,
- * toggle transport, quit) are handled here and forwarded to the parent, since
- * this is the focused component that receives keyboard input.
+ * inside a box whose top border carries a title (Claude-Code style). Action keys
+ * (eval, toggle transport, focus command bar, quit) are forwarded to the parent.
+ * Only receives input while `active`.
  */
 import React, { useReducer, useRef } from 'react';
 import { Box, Text, useInput } from 'ink';
@@ -12,8 +12,12 @@ import { bufferText, createBuffer, reduce, type Buffer, type EditAction } from '
 
 export interface EditorProps {
   initialCode: string;
+  /** explicit width so it lines up with the header and command bar */
+  width: number;
+  active: boolean;
   onEvaluate: (code: string) => void;
   onToggle: () => void;
+  onFocusCommand: () => void;
   onQuit: () => void;
 }
 
@@ -23,7 +27,10 @@ function isCtrlSpace(input: string, ctrl: boolean): boolean {
   return ctrl && input === ' ';
 }
 
-export function Editor({ initialCode, onEvaluate, onToggle, onQuit }: EditorProps): React.ReactElement {
+export function Editor(props: EditorProps): React.ReactElement {
+  const { initialCode, width, active, onEvaluate, onToggle, onFocusCommand, onQuit } = props;
+  const color = active ? 'cyan' : 'gray';
+
   const [buf, dispatch] = useReducer(
     (state: Buffer, action: EditAction) => reduce(state, action),
     initialCode,
@@ -35,45 +42,46 @@ export function Editor({ initialCode, onEvaluate, onToggle, onQuit }: EditorProp
   const bufRef = useRef(buf);
   bufRef.current = buf;
 
-  useInput((input, key) => {
-    // --- action chords ---
-    // A plain space (input === ' ', key.ctrl === false) is NOT a chord and
-    // falls through to insertion below.
-    if (isCtrlSpace(input, key.ctrl)) {
-      onToggle();
-      return;
-    }
-    if (key.ctrl && (input === 'e' || key.return)) {
-      onEvaluate(bufferText(bufRef.current));
-      return;
-    }
-    if (key.ctrl && input === 'q') {
-      onQuit();
-      return;
-    }
+  useInput(
+    (input, key) => {
+      // --- action chords ---
+      if (isCtrlSpace(input, key.ctrl)) return onToggle();
+      if (key.ctrl && (input === 'e' || key.return)) {
+        return onEvaluate(bufferText(bufRef.current));
+      }
+      if (key.ctrl && input === 'q') return onQuit();
+      if (key.tab) return onFocusCommand();
 
-    // --- navigation ---
-    if (key.leftArrow) return dispatch({ type: 'left' });
-    if (key.rightArrow) return dispatch({ type: 'right' });
-    if (key.upArrow) return dispatch({ type: 'up' });
-    if (key.downArrow) return dispatch({ type: 'down' });
+      // --- navigation ---
+      if (key.leftArrow) return dispatch({ type: 'left' });
+      if (key.rightArrow) return dispatch({ type: 'right' });
+      if (key.upArrow) return dispatch({ type: 'up' });
+      if (key.downArrow) return dispatch({ type: 'down' });
 
-    // --- editing ---
-    if (key.return) return dispatch({ type: 'newline' });
-    // Backspace arrives as `backspace` or `delete` depending on the terminal;
-    // treat both as backspace so deletion always works.
-    if (key.backspace || key.delete) return dispatch({ type: 'backspace' });
-    if (key.tab) return dispatch({ type: 'insert', text: '  ' });
+      // --- editing ---
+      if (key.return) return dispatch({ type: 'newline' });
+      // Backspace arrives as `backspace` or `delete` depending on terminal;
+      // treat both as backspace so deletion always works.
+      if (key.backspace || key.delete) return dispatch({ type: 'backspace' });
 
-    // Ignore any other control/meta combos; insert everything else verbatim.
-    if (key.ctrl || key.meta || key.escape) return;
-    if (input) dispatch({ type: 'insert', text: input });
-  });
+      // Ignore other control/meta combos; insert everything else verbatim.
+      if (key.ctrl || key.meta || key.escape) return;
+      if (input) dispatch({ type: 'insert', text: input });
+    },
+    { isActive: active },
+  );
 
   return (
-    <Box flexDirection="column" flexGrow={1} borderStyle="round" borderColor="cyan" paddingX={1}>
+    <Box
+      flexDirection="column"
+      flexGrow={1}
+      width={width}
+      borderStyle="round"
+      borderColor={color}
+      paddingX={1}
+    >
       {buf.lines.map((line, row) => (
-        <EditorLine key={row} line={line} number={row + 1} isCursor={row === buf.row} col={buf.col} />
+        <EditorLine key={row} line={line} number={row + 1} isCursor={active && row === buf.row} col={buf.col} />
       ))}
     </Box>
   );

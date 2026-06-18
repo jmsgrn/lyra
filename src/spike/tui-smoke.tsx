@@ -16,11 +16,13 @@ console.log(frame);
 console.log('----------------------');
 
 const checks: Record<string, boolean> = {
-  title: frame.includes('lyra'),
+  header: frame.includes('lyra') && frame.includes('v0.0.0'),
   transport: frame.includes('stopped') || frame.includes('playing'),
+  clock: frame.includes('cps') && frame.includes('bpm') && frame.includes('cycle'),
   gutter: frame.includes(' 1 '),
   defaultCode: frame.includes('sawtooth'),
-  hints: frame.includes('eval') && frame.includes('play/stop') && frame.includes('quit'),
+  commandBar: frame.includes('❯') && frame.includes('Tab for commands'),
+  hints: frame.includes('eval') && frame.includes('play/stop') && frame.includes('command'),
 };
 console.log('checks:', JSON.stringify(checks));
 

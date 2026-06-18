@@ -1,7 +1,7 @@
 /**
  * React hook bridging the Ink UI to the lyra audio/Strudel engine.
  *
- * Owns the LyraRepl instance, exposes evaluate/hush transport actions, and
+ * Owns the LyraRepl instance, exposes evaluate/play/stop transport actions, and
  * surfaces engine state + a human-readable status line for the UI.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -23,12 +23,16 @@ export interface ReplApi {
   evaluate: (code: string) => void;
   /** start/stop the transport */
   toggle: () => void;
-  hush: () => void;
+  play: () => void;
+  stop: () => void;
   setCps: (cps: number) => void;
 }
 
 export function useRepl(): ReplApi {
   const replRef = useRef<LyraRepl | null>(null);
+  // Whether a pattern has been evaluated at least once. The scheduler throws
+  // ("no pattern set") if started before that, so play/toggle guard on it.
+  const patternSetRef = useRef(false);
   const [phase, setPhase] = useState<Phase>('starting');
   const [status, setStatus] = useState('starting audio engine…');
   const [state, setState] = useState<ReplState>({});
@@ -87,19 +91,43 @@ export function useRepl(): ReplApi {
     const repl = replRef.current;
     if (!repl) return;
     Promise.resolve(repl.evaluate(code))
-      .then(() => setStatus('playing'))
+      .then(() => {
+        patternSetRef.current = true;
+        setStatus('playing');
+      })
       .catch((err) => setStatus(`eval error: ${msg(err)}`));
+  }, []);
+
+  // Start the transport, guarding against the scheduler's "no pattern set"
+  // throw (which surfaces as an async rejection) before anything is evaluated.
+  const startSafely = useCallback(() => {
+    const repl = replRef.current;
+    if (!repl) return;
+    if (!patternSetRef.current) {
+      setStatus('nothing to play yet — press Ctrl+E to evaluate');
+      return;
+    }
+    Promise.resolve(repl.start())
+      .then(() => setStatus('playing'))
+      .catch((err) => setStatus(`play error: ${msg(err)}`));
   }, []);
 
   const toggle = useCallback(() => {
     const repl = replRef.current;
     if (!repl) return;
-    repl.toggle();
-    const started = repl.state?.started === true;
-    setStatus(started ? 'playing' : 'stopped');
-  }, []);
+    if (repl.state?.started === true) {
+      repl.stop();
+      setStatus('stopped');
+    } else {
+      startSafely();
+    }
+  }, [startSafely]);
 
-  const hush = useCallback(() => {
+  const play = useCallback(() => {
+    startSafely();
+  }, [startSafely]);
+
+  const stop = useCallback(() => {
     replRef.current?.stop();
     setStatus('stopped');
   }, []);
@@ -109,5 +137,5 @@ export function useRepl(): ReplApi {
     setCpsState(value);
   }, []);
 
-  return { phase, status, state, cps, cycle, evaluate, toggle, hush, setCps };
+  return { phase, status, state, cps, cycle, evaluate, toggle, play, stop, setCps };
 }
