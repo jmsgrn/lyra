@@ -16,19 +16,12 @@ export interface EditorProps {
   width: number;
   active: boolean;
   onEvaluate: (code: string) => void;
-  onToggle: () => void;
   onFocusCommand: () => void;
   onQuit: () => void;
 }
 
-/** Ctrl+Space: most terminals send a NUL byte; some send space + ctrl modifier. */
-function isCtrlSpace(input: string, ctrl: boolean): boolean {
-  if (input.length === 1 && input.charCodeAt(0) === 0) return true; // NUL byte
-  return ctrl && input === ' ';
-}
-
 export function Editor(props: EditorProps): React.ReactElement {
-  const { initialCode, width, active, onEvaluate, onToggle, onFocusCommand, onQuit } = props;
+  const { initialCode, width, active, onEvaluate, onFocusCommand, onQuit } = props;
   const color = active ? 'cyan' : 'gray';
 
   const [buf, dispatch] = useReducer(
@@ -45,7 +38,6 @@ export function Editor(props: EditorProps): React.ReactElement {
   useInput(
     (input, key) => {
       // --- action chords ---
-      if (isCtrlSpace(input, key.ctrl)) return onToggle();
       if (key.ctrl && (input === 'e' || key.return)) {
         return onEvaluate(bufferText(bufRef.current));
       }

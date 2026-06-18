@@ -1,6 +1,10 @@
 /**
- * Top-level Ink app: header (transport/clock), the titled editor pane, a
- * slash-command bar, and a footer with status + keybinding hints.
+ * Top-level Ink app: a header whose top border carries the "lyra vX.Y.Z" title
+ * (Claude-Code style) and whose body shows the transport/clock plus key hints,
+ * the editor pane, a slash-command bar, and a status line.
+ *
+ * Transport is driven by slash commands (/play, /stop, ...) rather than a key
+ * chord; Ctrl+E evaluates and Tab focuses the command bar.
  */
 import { createRequire } from 'node:module';
 import React, { useState } from 'react';
@@ -26,6 +30,15 @@ const DEFAULT_CODE = `stack(
 )`;
 
 type Mode = 'editor' | 'command';
+
+/** A rounded top border with an inline title: `╭─ lyra v0.0.0 ───────╮`. */
+function titleBorder(title: string, width: number): string {
+  const label = ` ${title} `;
+  const left = '╭─';
+  const right = '╮';
+  const fill = Math.max(0, width - left.length - label.length - right.length);
+  return left + label + '─'.repeat(fill) + right;
+}
 
 export function App(): React.ReactElement {
   const { exit } = useApp();
@@ -57,6 +70,7 @@ export function App(): React.ReactElement {
       <Header
         version={version}
         width={width}
+        mode={mode}
         started={started}
         cps={repl.cps}
         cycle={repl.cycle}
@@ -67,7 +81,6 @@ export function App(): React.ReactElement {
         active={mode === 'editor'}
         initialCode={DEFAULT_CODE}
         onEvaluate={repl.evaluate}
-        onToggle={repl.toggle}
         onFocusCommand={() => setMode('command')}
         onQuit={exit}
       />
@@ -79,7 +92,7 @@ export function App(): React.ReactElement {
         onCancel={() => setMode('editor')}
         onQuit={exit}
       />
-      <Footer status={repl.status} error={error} mode={mode} />
+      <Footer status={repl.status} error={error} />
     </Box>
   );
 }
@@ -87,60 +100,61 @@ export function App(): React.ReactElement {
 interface HeaderProps {
   version: string;
   width: number;
+  mode: Mode;
   started: boolean;
   cps: number;
   cycle: number;
   phase: string;
 }
 
-function Header({ version, width, started, cps, cycle, phase }: HeaderProps): React.ReactElement {
+function Header({ version, width, mode, started, cps, cycle, phase }: HeaderProps): React.ReactElement {
   const bpm = Math.round(cpsToBpm(cps));
   return (
-    <Box borderStyle="round" borderColor="magenta" width={width} paddingX={1} justifyContent="space-between">
-      <Text>
-        <Text color="magenta" bold>
-          🎶 lyra
+    <Box flexDirection="column" width={width}>
+      <Text color="magenta">{titleBorder(`lyra v${version}`, width)}</Text>
+      <Box
+        borderStyle="round"
+        borderTop={false}
+        borderColor="magenta"
+        width={width}
+        paddingX={1}
+        justifyContent="space-between"
+      >
+        <Text>
+          <Text color={started ? 'green' : 'gray'}>{started ? '● playing' : '○ stopped'}</Text>
+          <Text dimColor>
+            {'  '}
+            {cps.toFixed(2)} cps · {bpm} bpm · cycle {Math.floor(cycle)}
+            {phase !== 'ready' ? ` · ${phase}` : ''}
+          </Text>
         </Text>
-        <Text dimColor> v{version}</Text>
-      </Text>
-      <Text>
-        <Text color={started ? 'green' : 'gray'}>{started ? '● playing' : '○ stopped'}</Text>
-        <Text dimColor>
-          {'  '}
-          {cps.toFixed(2)} cps · {bpm} bpm · cycle {Math.floor(cycle)}
-          {phase !== 'ready' ? ` · ${phase}` : ''}
-        </Text>
-      </Text>
+        <KeyHints mode={mode} />
+      </Box>
     </Box>
   );
 }
 
-function Footer({
-  status,
-  error,
-  mode,
-}: {
-  status: string;
-  error: unknown;
-  mode: Mode;
-}): React.ReactElement {
-  const errText = error ? (error instanceof Error ? error.message : String(error)) : undefined;
-  const hints =
-    mode === 'command' ? (
-      <>
-        <Text color="yellow">Enter</Text> run · <Text color="yellow">Esc</Text> cancel ·{' '}
-        <Text color="yellow">/help</Text> commands
-      </>
-    ) : (
-      <>
-        <Text color="cyan">Ctrl+E</Text> eval · <Text color="cyan">Ctrl+Space</Text> play/stop ·{' '}
-        <Text color="cyan">Tab</Text> command · <Text color="cyan">Ctrl+Q</Text> quit
-      </>
+function KeyHints({ mode }: { mode: Mode }): React.ReactElement {
+  if (mode === 'command') {
+    return (
+      <Text dimColor>
+        <Text color="yellow">Enter</Text> run · <Text color="yellow">Esc</Text> cancel
+      </Text>
     );
+  }
   return (
-    <Box flexDirection="column" marginTop={1}>
+    <Text dimColor>
+      <Text color="cyan">Ctrl+E</Text> eval · <Text color="cyan">Tab</Text> cmd ·{' '}
+      <Text color="cyan">Ctrl+Q</Text> quit
+    </Text>
+  );
+}
+
+function Footer({ status, error }: { status: string; error: unknown }): React.ReactElement {
+  const errText = error ? (error instanceof Error ? error.message : String(error)) : undefined;
+  return (
+    <Box marginTop={1}>
       <Text>{errText ? <Text color="red">⚠ {errText}</Text> : <Text dimColor>{status}</Text>}</Text>
-      <Text dimColor>{hints}</Text>
     </Box>
   );
 }

@@ -22,7 +22,7 @@ const checks: Record<string, boolean> = {
   gutter: frame.includes(' 1 '),
   defaultCode: frame.includes('sawtooth'),
   commandBar: frame.includes('❯') && frame.includes('Tab for commands'),
-  hints: frame.includes('eval') && frame.includes('play/stop') && frame.includes('command'),
+  hints: frame.includes('eval') && frame.includes('cmd') && frame.includes('quit'),
 };
 console.log('checks:', JSON.stringify(checks));
 

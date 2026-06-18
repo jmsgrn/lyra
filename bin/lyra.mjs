@@ -22,8 +22,10 @@ if (args.includes('--help') || args.includes('-h')) {
       '',
       'usage: lyra',
       '',
-      '  Ctrl+E      evaluate / update     Ctrl+Space  play / stop',
-      '  Ctrl+Q      quit                  arrows      move cursor',
+      '  Ctrl+E   evaluate          Tab     focus command bar',
+      '  Ctrl+Q   quit              arrows  move cursor',
+      '',
+      '  commands: /play  /stop  /bpm <n>  /cps <n>  /help',
     ].join('\n'),
   );
   process.exit(0);

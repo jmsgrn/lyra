@@ -51,7 +51,7 @@ packages are consumed through typed wrappers.
 
 ```bash
 npm install        # postinstall patches a mis-packaged transitive dep
-npm run dev        # launch the TUI — Ctrl+E to play, Ctrl+Space stop, Ctrl+Q quit
+npm run dev        # launch the TUI — Ctrl+E eval, Tab for /commands, Ctrl+Q quit
 ```
 
 Put it on your PATH so you can just type `lyra`:
