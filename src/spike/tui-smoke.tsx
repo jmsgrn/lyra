@@ -21,7 +21,7 @@ const checks: Record<string, boolean> = {
   clock: frame.includes('cps') && frame.includes('bpm') && frame.includes('cycle'),
   gutter: frame.includes(' 1 '),
   defaultCode: frame.includes('sawtooth'),
-  commandBar: frame.includes('❯') && frame.includes('Tab for commands'),
+  commandBar: frame.includes('❯'),
   hints: frame.includes('eval') && frame.includes('cmd') && frame.includes('quit'),
 };
 console.log('checks:', JSON.stringify(checks));

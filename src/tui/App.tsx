@@ -47,11 +47,15 @@ export function App(): React.ReactElement {
   const repl = useRepl();
   const { columns, rows } = useTerminalSize();
   const width = Math.max(24, columns - 2); // App applies paddingX={1}
+  // Leave one row of headroom so a trailing newline can't scroll the top off.
+  const height = Math.max(10, rows - 1);
   const [mode, setMode] = useState<Mode>('editor');
   const [commandResult, setCommandResult] = useState('');
 
   const started = repl.state.started === true;
   const error = repl.state.error;
+  const errText = error ? (error instanceof Error ? error.message : String(error)) : undefined;
+  const message = errText ?? (commandResult || repl.status);
 
   const commandContext: CommandContext = {
     play: repl.play,
@@ -68,7 +72,7 @@ export function App(): React.ReactElement {
   };
 
   return (
-    <Box flexDirection="column" paddingX={1} height={rows}>
+    <Box flexDirection="column" paddingX={1} height={height}>
       <Header
         version={version}
         width={width}
@@ -86,10 +90,10 @@ export function App(): React.ReactElement {
         onFocusCommand={() => setMode('command')}
         onQuit={exit}
       />
-      <Footer status={repl.status} error={error} />
       <CommandBar
         active={mode === 'command'}
-        result={commandResult}
+        message={message}
+        isError={errText !== undefined}
         width={width}
         onExecute={execute}
         onCancel={() => setMode('editor')}
@@ -152,16 +156,5 @@ function KeyHints({ mode }: { mode: Mode }): React.ReactElement {
       <Text color={theme.key}>Ctrl+E</Text> eval · <Text color={theme.key}>Tab</Text> cmd ·{' '}
       <Text color={theme.key}>Ctrl+Q</Text> quit
     </Text>
-  );
-}
-
-function Footer({ status, error }: { status: string; error: unknown }): React.ReactElement {
-  const errText = error ? (error instanceof Error ? error.message : String(error)) : undefined;
-  return (
-    <Box marginTop={1}>
-      <Text>
-        {errText ? <Text color={theme.error}>⚠ {errText}</Text> : <Text color={theme.muted}>{status}</Text>}
-      </Text>
-    </Box>
   );
 }

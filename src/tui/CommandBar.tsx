@@ -9,7 +9,9 @@ import { theme } from './theme.js';
 
 export interface CommandBarProps {
   active: boolean;
-  result: string;
+  /** shown when not focused: status / last result / error */
+  message: string;
+  isError: boolean;
   /** explicit width so it lines up with the editor box above */
   width: number;
   onExecute: (text: string) => void;
@@ -17,7 +19,15 @@ export interface CommandBarProps {
   onQuit: () => void;
 }
 
-export function CommandBar({ active, result, width, onExecute, onCancel, onQuit }: CommandBarProps): React.ReactElement {
+export function CommandBar({
+  active,
+  message,
+  isError,
+  width,
+  onExecute,
+  onCancel,
+  onQuit,
+}: CommandBarProps): React.ReactElement {
   const [text, setText] = useState('');
 
   useInput(
@@ -56,8 +66,8 @@ export function CommandBar({ active, result, width, onExecute, onCancel, onQuit 
           <Text inverse> </Text>
         </Text>
       ) : (
-        <Text color={theme.muted} dimColor>
-          {result || 'Tab for commands · /help'}
+        <Text color={isError ? theme.error : theme.muted} dimColor={!isError}>
+          {message || 'Tab for commands · /help'}
         </Text>
       )}
     </Box>
