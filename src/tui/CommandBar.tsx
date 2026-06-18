@@ -64,6 +64,11 @@ export function CommandBar({
         <Text>
           {text}
           <Text inverse> </Text>
+          {text === '' && message ? (
+            <Text color={isError ? theme.error : theme.muted} dimColor={!isError}>
+              {`  ${message}`}
+            </Text>
+          ) : null}
         </Text>
       ) : (
         <Text color={isError ? theme.error : theme.muted} dimColor={!isError}>

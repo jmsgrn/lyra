@@ -23,7 +23,7 @@ export interface EditorProps {
 
 export function Editor(props: EditorProps): React.ReactElement {
   const { initialCode, width, active, onEvaluate, onFocusCommand, onQuit } = props;
-  const color = active ? theme.accent : theme.borderInactive;
+  const color = active ? theme.editorActive : theme.borderInactive;
 
   const [buf, dispatch] = useReducer(
     (state: Buffer, action: EditAction) => reduce(state, action),
@@ -91,7 +91,7 @@ function EditorLine({ line, number, isCursor, col }: EditorLineProps): React.Rea
   const gutter = String(number).padStart(2, ' ');
   return (
     <Box>
-      <Text color={isCursor ? theme.accent : theme.muted} dimColor={!isCursor}>
+      <Text color={isCursor ? theme.editorActive : theme.muted} dimColor={!isCursor}>
         {gutter}{' '}
       </Text>
       <Text>{isCursor ? <CursorLine line={line} col={col} /> : line || ' '}</Text>

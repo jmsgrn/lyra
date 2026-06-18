@@ -67,8 +67,9 @@ export function App(): React.ReactElement {
   };
 
   const execute = (text: string): void => {
+    // Keep focus on the command bar so you can fire several commands in a row;
+    // Esc or Tab returns to the editor.
     setCommandResult(runCommand(text, commandContext));
-    setMode('editor');
   };
 
   return (
@@ -117,17 +118,17 @@ function Header({ version, width, mode, started, cps, cycle, phase }: HeaderProp
   const bpm = Math.round(cpsToBpm(cps));
   return (
     <Box flexDirection="column" width={width}>
-      <Text color={theme.accent}>{titleBorder(`lyra v${version}`, width)}</Text>
+      <Text color={theme.header}>{titleBorder(`lyra v${version}`, width)}</Text>
       <Box
         borderStyle="round"
         borderTop={false}
-        borderColor={theme.accent}
+        borderColor={theme.header}
         width={width}
         paddingX={1}
         justifyContent="space-between"
         alignItems="center"
       >
-        <Text color={theme.accent}>{LOGO}</Text>
+        <Text color={theme.header}>{LOGO}</Text>
         <Box flexDirection="column" alignItems="flex-end">
           <Text color={started ? theme.playing : theme.stopped}>
             {started ? '● playing' : '○ stopped'}

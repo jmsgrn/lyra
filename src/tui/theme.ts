@@ -1,20 +1,22 @@
 /**
- * Central color theme. A warm coral accent with muted grays — cohesive and a
- * bit Claude-Code-ish. Ink renders hex colors via truecolor terminals.
+ * Central color theme — the original palette: magenta header, cyan editor,
+ * yellow command bar, with green/red/gray accents.
  */
 export const theme = {
-  /** primary brand accent — logo, active editor border, key labels */
-  accent: '#d98a5b',
-  /** command-bar accent (amber/gold) */
-  command: '#e6b450',
-  /** transport states */
-  playing: '#8ec07c',
-  stopped: 'gray',
-  /** errors */
-  error: '#fb4934',
+  /** header border + constellation logo */
+  header: 'magenta',
+  /** editor active border + cursor gutter */
+  editorActive: 'cyan',
+  /** command bar active border + prompt */
+  command: 'yellow',
   /** inactive borders / muted text */
   borderInactive: 'gray',
   muted: 'gray',
   /** keybinding labels */
-  key: '#83a598',
+  key: 'cyan',
+  /** transport states */
+  playing: 'green',
+  stopped: 'gray',
+  /** errors */
+  error: 'red',
 } as const;
