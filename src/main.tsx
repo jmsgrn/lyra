@@ -34,3 +34,7 @@ process.on('SIGTERM', () => {
 const { waitUntilExit } = render(<App />);
 await waitUntilExit();
 restore();
+// node-web-audio-api keeps a native audio thread alive, so the event loop
+// won't drain on its own — force a clean exit so the shell prompt returns
+// immediately (the unmount already triggered engine teardown).
+process.exit(0);
