@@ -5,6 +5,7 @@
  */
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { theme } from './theme.js';
 
 export interface CommandBarProps {
   active: boolean;
@@ -45,17 +46,19 @@ export function CommandBar({ active, result, width, onExecute, onCancel, onQuit 
     { isActive: active },
   );
 
-  const color = active ? 'yellow' : 'gray';
+  const color = active ? theme.command : theme.borderInactive;
   return (
     <Box borderStyle="round" borderColor={color} paddingX={1} width={width}>
-      <Text color={color}>{'❯ '}</Text>
+      <Text color={active ? theme.command : theme.muted}>{'❯ '}</Text>
       {active ? (
         <Text>
           {text}
           <Text inverse> </Text>
         </Text>
       ) : (
-        <Text dimColor>{result || 'Tab for commands · /help'}</Text>
+        <Text color={theme.muted} dimColor>
+          {result || 'Tab for commands · /help'}
+        </Text>
       )}
     </Box>
   );

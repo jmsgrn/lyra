@@ -14,9 +14,13 @@ import { CommandBar } from './CommandBar.js';
 import { useRepl } from './useRepl.js';
 import { useTerminalSize } from './useTerminalSize.js';
 import { runCommand, type CommandContext } from './commands.js';
+import { makeLogo } from './logo.js';
+import { theme } from './theme.js';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../../package.json') as { version: string };
+
+const LOGO = makeLogo('lyra');
 
 // One cycle ≈ one bar of 4 beats, so bpm = cps * 240.
 const BEATS_PER_CYCLE = 4;
@@ -30,15 +34,6 @@ const DEFAULT_CODE = `stack(
 )`;
 
 type Mode = 'editor' | 'command';
-
-/** A rounded top border with an inline title: `╭─ lyra v0.0.0 ───────╮`. */
-function titleBorder(title: string, width: number): string {
-  const label = ` ${title} `;
-  const left = '╭─';
-  const right = '╮';
-  const fill = Math.max(0, width - left.length - label.length - right.length);
-  return left + label + '─'.repeat(fill) + right;
-}
 
 export function App(): React.ReactElement {
   const { exit } = useApp();
@@ -110,23 +105,25 @@ interface HeaderProps {
 function Header({ version, width, mode, started, cps, cycle, phase }: HeaderProps): React.ReactElement {
   const bpm = Math.round(cpsToBpm(cps));
   return (
-    <Box flexDirection="column" width={width}>
-      <Text color="magenta">{titleBorder(`lyra v${version}`, width)}</Text>
-      <Box
-        borderStyle="round"
-        borderTop={false}
-        borderColor="magenta"
-        width={width}
-        paddingX={1}
-        justifyContent="space-between"
-      >
-        <Text>
-          <Text color={started ? 'green' : 'gray'}>{started ? '● playing' : '○ stopped'}</Text>
-          <Text dimColor>
-            {'  '}
-            {cps.toFixed(2)} cps · {bpm} bpm · cycle {Math.floor(cycle)}
-            {phase !== 'ready' ? ` · ${phase}` : ''}
-          </Text>
+    <Box
+      borderStyle="round"
+      borderColor={theme.accent}
+      width={width}
+      paddingX={1}
+      justifyContent="space-between"
+      alignItems="center"
+    >
+      <Text color={theme.accent}>{LOGO}</Text>
+      <Box flexDirection="column" alignItems="flex-end">
+        <Text color={theme.muted} dimColor>
+          v{version}
+        </Text>
+        <Text color={started ? theme.playing : theme.stopped}>
+          {started ? '● playing' : '○ stopped'}
+        </Text>
+        <Text color={theme.muted}>
+          {cps.toFixed(2)} cps · {bpm} bpm · cycle {Math.floor(cycle)}
+          {phase !== 'ready' ? ` · ${phase}` : ''}
         </Text>
         <KeyHints mode={mode} />
       </Box>
@@ -137,15 +134,15 @@ function Header({ version, width, mode, started, cps, cycle, phase }: HeaderProp
 function KeyHints({ mode }: { mode: Mode }): React.ReactElement {
   if (mode === 'command') {
     return (
-      <Text dimColor>
-        <Text color="yellow">Enter</Text> run · <Text color="yellow">Esc</Text> cancel
+      <Text color={theme.muted}>
+        <Text color={theme.command}>Enter</Text> run · <Text color={theme.command}>Esc</Text> cancel
       </Text>
     );
   }
   return (
-    <Text dimColor>
-      <Text color="cyan">Ctrl+E</Text> eval · <Text color="cyan">Tab</Text> cmd ·{' '}
-      <Text color="cyan">Ctrl+Q</Text> quit
+    <Text color={theme.muted}>
+      <Text color={theme.key}>Ctrl+E</Text> eval · <Text color={theme.key}>Tab</Text> cmd ·{' '}
+      <Text color={theme.key}>Ctrl+Q</Text> quit
     </Text>
   );
 }
@@ -154,7 +151,9 @@ function Footer({ status, error }: { status: string; error: unknown }): React.Re
   const errText = error ? (error instanceof Error ? error.message : String(error)) : undefined;
   return (
     <Box marginTop={1}>
-      <Text>{errText ? <Text color="red">⚠ {errText}</Text> : <Text dimColor>{status}</Text>}</Text>
+      <Text>
+        {errText ? <Text color={theme.error}>⚠ {errText}</Text> : <Text color={theme.muted}>{status}</Text>}
+      </Text>
     </Box>
   );
 }

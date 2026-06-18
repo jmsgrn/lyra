@@ -16,7 +16,7 @@ console.log(frame);
 console.log('----------------------');
 
 const checks: Record<string, boolean> = {
-  header: frame.includes('lyra') && frame.includes('v0.0.0'),
+  header: frame.includes('v0.0.0'), // logo is ASCII art, so no literal "lyra"
   transport: frame.includes('stopped') || frame.includes('playing'),
   clock: frame.includes('cps') && frame.includes('bpm') && frame.includes('cycle'),
   gutter: frame.includes(' 1 '),

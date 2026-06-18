@@ -9,6 +9,7 @@
 import React, { useReducer, useRef } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { bufferText, createBuffer, reduce, type Buffer, type EditAction } from './editorBuffer.js';
+import { theme } from './theme.js';
 
 export interface EditorProps {
   initialCode: string;
@@ -22,7 +23,7 @@ export interface EditorProps {
 
 export function Editor(props: EditorProps): React.ReactElement {
   const { initialCode, width, active, onEvaluate, onFocusCommand, onQuit } = props;
-  const color = active ? 'cyan' : 'gray';
+  const color = active ? theme.accent : theme.borderInactive;
 
   const [buf, dispatch] = useReducer(
     (state: Buffer, action: EditAction) => reduce(state, action),
@@ -90,7 +91,7 @@ function EditorLine({ line, number, isCursor, col }: EditorLineProps): React.Rea
   const gutter = String(number).padStart(2, ' ');
   return (
     <Box>
-      <Text color={isCursor ? 'cyan' : 'gray'} dimColor={!isCursor}>
+      <Text color={isCursor ? theme.accent : theme.muted} dimColor={!isCursor}>
         {gutter}{' '}
       </Text>
       <Text>{isCursor ? <CursorLine line={line} col={col} /> : line || ' '}</Text>
