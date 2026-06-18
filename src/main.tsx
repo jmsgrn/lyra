@@ -12,8 +12,10 @@ import { App } from './tui/App.js';
 
 // Use the terminal's alternate screen buffer (like vim/htop) so a full-height
 // layout fills the screen cleanly instead of overflowing the scrollback.
-const ALT_ENTER = '\x1b[?1049h';
-const ALT_LEAVE = '\x1b[?1049l';
+// Enter clears + homes so every launch starts from a clean slate (otherwise a
+// re-launch can paint into a stale alt screen and the first frame is missing).
+const ALT_ENTER = '\x1b[?1049h\x1b[2J\x1b[H'; // alt screen, clear, cursor home
+const ALT_LEAVE = '\x1b[?1049l\x1b[?25h'; // normal screen, restore cursor
 
 let restored = false;
 const restore = (): void => {
@@ -24,6 +26,10 @@ const restore = (): void => {
 
 process.stdout.write(ALT_ENTER);
 process.on('exit', restore);
+process.on('SIGTERM', () => {
+  restore();
+  process.exit(0);
+});
 
 const { waitUntilExit } = render(<App />);
 await waitUntilExit();
