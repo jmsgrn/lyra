@@ -37,7 +37,9 @@
     "superdough": "^1.1.0"
   },
   "devDependencies": {
+    "@codemirror/commands": "^6.10.3",
     "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/view": "^6.43.1",
     "@types/node": "^22.10.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",

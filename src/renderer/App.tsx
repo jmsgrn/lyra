@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
 import { runCommand, type CommandContext } from '../shared/commands.js';
 import type { Settings } from '../shared/settings.js';
-import { Editor } from './Editor.js';
+import { Editor, type EditorHandle } from './Editor.js';
 import { CommandBar } from './CommandBar.js';
 import { useEngine } from './useEngine.js';
 import { lyra, type InitialState } from './ipc.js';
@@ -57,6 +57,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
   const [commandResult, setCommandResult] = useState('');
   const [commandActive, setCommandActive] = useState(false);
   const commandInputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<EditorHandle>(null);
 
   const onChange = useCallback((text: string) => {
     codeRef.current = text;
@@ -99,17 +100,34 @@ export function App({ initial, settings }: AppProps): ReactElement {
     [filePath],
   );
 
+  // focus the command bar (Ctrl+P); the input's onFocus flips `active`
   const focusCommand = useCallback(() => {
-    setCommandActive(true);
     requestAnimationFrame(() => commandInputRef.current?.focus());
   }, []);
+  // hand focus back to the editor (Esc in the command bar)
+  const focusEditor = useCallback(() => editorRef.current?.focus(), []);
 
-  // Ctrl+Q quits from anywhere.
+  // Global app chords — work regardless of which pane has focus, and
+  // preventDefault beats Chromium's own Ctrl+P (print) / Ctrl+S (save page).
+  // Latest callbacks via ref so we subscribe once.
+  const chords = useRef({ evaluate: engine.evaluate, save: saveFile, focusCommand });
+  chords.current = { evaluate: engine.evaluate, save: saveFile, focusCommand };
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if (e.ctrlKey && e.key === 'q') {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const k = e.key.toLowerCase();
+      if (k === 'q') {
         e.preventDefault();
         window.close();
+      } else if (k === 'e' || k === 'enter') {
+        e.preventDefault();
+        chords.current.evaluate(codeRef.current);
+      } else if (k === 's') {
+        e.preventDefault();
+        void chords.current.save();
+      } else if (k === 'p') {
+        e.preventDefault();
+        chords.current.focusCommand();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -173,15 +191,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
         </div>
       </div>
 
-      <Editor
-        key={docKey}
-        docKey={docKey}
-        initialDoc={seedDoc}
-        onChange={onChange}
-        onEvaluate={engine.evaluate}
-        onSave={() => void saveFile()}
-        onFocusCommand={focusCommand}
-      />
+      <Editor key={docKey} ref={editorRef} docKey={docKey} initialDoc={seedDoc} onChange={onChange} />
 
       <CommandBar
         ref={commandInputRef}
@@ -189,8 +199,8 @@ export function App({ initial, settings }: AppProps): ReactElement {
         message={message}
         isError={errText !== undefined}
         onExecute={execute}
-        onFocus={() => setCommandActive(true)}
-        onBlurToEditor={() => setCommandActive(false)}
+        onActiveChange={setCommandActive}
+        onEscapeToEditor={focusEditor}
       />
     </div>
   );

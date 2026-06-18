@@ -166,7 +166,13 @@ function createWindow() {
       preload: join(__dirname, 'preload.cjs'),
     },
   });
+  // Filter benign dev noise so the launcher terminal stays readable. The
+  // superdough deprecation is its own internal node.onended usage (harmless in
+  // Chromium); the Electron warning is a dev-only CSP nag (we need unsafe-eval
+  // to eval live-coding source); the rest are framework chatter.
+  const NOISE = /\[superdough\] Deprecation warning|Electron Security Warning|Download the React DevTools/i;
   win.webContents.on('console-message', (_e, _lvl, message) => {
+    if (NOISE.test(message)) return;
     process.stdout.write(`[renderer] ${message}\n`);
   });
   if (RENDERER_URL) {

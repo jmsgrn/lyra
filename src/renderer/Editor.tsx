@@ -1,30 +1,35 @@
 /**
  * CodeMirror 6 editor pane (the target editor). Mounts once; the parent
- * replaces the document on file-open by bumping `docKey`. Eval/save/focus-command
- * chords are forwarded to the parent; edits are reported via onChange.
+ * replaces the document on file-open by bumping `docKey`, and can focus it via
+ * the imperative ref. App chords (eval/save/command/quit) are handled globally
+ * in App, so the editor itself only does text editing + reports changes.
  */
-import { useEffect, useRef, type ReactElement } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, type ReactElement } from 'react';
 import { EditorView, basicSetup } from 'codemirror';
-import { javascript } from '@codemirror/lang-javascript';
 import { keymap } from '@codemirror/view';
+import { indentWithTab } from '@codemirror/commands';
+import { javascript } from '@codemirror/lang-javascript';
 
 export interface EditorProps {
   initialDoc: string;
   /** bump to load a new document (file open) */
   docKey: number;
   onChange: (code: string) => void;
-  onEvaluate: (code: string) => void;
-  onSave: () => void;
-  onFocusCommand: () => void;
 }
 
-export function Editor(props: EditorProps): ReactElement {
+export interface EditorHandle {
+  focus(): void;
+}
+
+export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(props, ref): ReactElement {
   const parentRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
 
-  // Keep latest callbacks in a ref so the (long-lived) keymap reads fresh ones.
-  const cb = useRef(props);
-  cb.current = props;
+  useImperativeHandle(ref, () => ({ focus: () => viewRef.current?.focus() }), []);
+
+  // Keep latest onChange in a ref so the long-lived listener reads the fresh one.
+  const onChangeRef = useRef(props.onChange);
+  onChangeRef.current = props.onChange;
 
   useEffect(() => {
     const view = new EditorView({
@@ -33,14 +38,10 @@ export function Editor(props: EditorProps): ReactElement {
       extensions: [
         basicSetup,
         javascript(),
-        keymap.of([
-          { key: 'Ctrl-e', preventDefault: true, run: (v) => (cb.current.onEvaluate(v.state.doc.toString()), true) },
-          { key: 'Ctrl-Enter', preventDefault: true, run: (v) => (cb.current.onEvaluate(v.state.doc.toString()), true) },
-          { key: 'Ctrl-s', preventDefault: true, run: () => (cb.current.onSave(), true) },
-          { key: 'Ctrl-p', preventDefault: true, run: () => (cb.current.onFocusCommand(), true) },
-        ]),
+        // capture Tab to indent so it doesn't fall through and shift focus
+        keymap.of([indentWithTab]),
         EditorView.updateListener.of((u) => {
-          if (u.docChanged) cb.current.onChange(u.state.doc.toString());
+          if (u.docChanged) onChangeRef.current(u.state.doc.toString());
         }),
         EditorView.theme(
           {
@@ -62,4 +63,4 @@ export function Editor(props: EditorProps): ReactElement {
   }, [props.docKey]);
 
   return <div className="editor-wrap" ref={parentRef} />;
-}
+});
