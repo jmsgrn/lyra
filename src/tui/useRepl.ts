@@ -6,7 +6,8 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createRepl, type LyraRepl, type ReplState } from '../strudel/repl.js';
-import { closeEngine } from '../audio/engine.js';
+import { closeEngine, loadSampleSource } from '../audio/engine.js';
+import { settings } from '../config/settings.js';
 
 const msg = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
@@ -36,7 +37,7 @@ export function useRepl(): ReplApi {
   const [phase, setPhase] = useState<Phase>('starting');
   const [status, setStatus] = useState('starting audio engine…');
   const [state, setState] = useState<ReplState>({});
-  const [cps, setCpsState] = useState(0.5);
+  const [cps, setCpsState] = useState(settings.tempo.cps);
   const [cycle, setCycle] = useState(0);
 
   useEffect(() => {
@@ -48,8 +49,15 @@ export function useRepl(): ReplApi {
       .then((repl) => {
         if (!mounted) return;
         replRef.current = repl;
+        repl.setCps(settings.tempo.cps);
         setPhase('ready');
         setStatus('ready');
+        // auto-load configured sample sources (best-effort)
+        for (const source of settings.samples) {
+          loadSampleSource(source).catch((err) =>
+            mounted ? setStatus(`samples: ${msg(err)}`) : undefined,
+          );
+        }
       })
       .catch((err) => {
         if (!mounted) return;

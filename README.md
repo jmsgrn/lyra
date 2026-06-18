@@ -58,7 +58,24 @@ Put it on your PATH so you can just type `lyra`:
 
 ```bash
 ln -s "$PWD/bin/lyra.mjs" ~/.local/bin/lyra   # or: npm link
-lyra
+lyra              # scratch buffer
+lyra set.lyra     # open (or create) a file in the editor
+```
+
+Keys: **Ctrl+E** eval · **Ctrl+S** save · **Tab** command bar · **Ctrl+Q** quit.
+Commands: `/play` `/stop` `/bpm <n>` `/cps <n>` `/open <file>` `/save` `/settings` `/help`.
+
+## Configuration
+
+Settings live in `~/.config/lyra/settings.json` (or run `/settings` to edit them
+in-app). They deep-merge over the defaults — set only what you want to change:
+
+```jsonc
+{
+  "theme": { "header": "#d98a5b", "editorActive": "cyan", "command": "yellow" },
+  "tempo": { "cps": 0.5 },
+  "samples": ["~/samples/my-drum-machine"]
+}
 ```
 
 Other smoke tests:

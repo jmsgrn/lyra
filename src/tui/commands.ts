@@ -9,16 +9,21 @@ export interface CommandContext {
   toggle: () => void;
   setCps: (cps: number) => void;
   setBpm: (bpm: number) => void;
+  open: (path: string) => string;
+  save: (path?: string) => string;
+  openSettings: () => string;
   quit: () => void;
 }
 
-export const COMMAND_HELP = '/play · /stop · /bpm <n> · /cps <n> · /quit';
+export const COMMAND_HELP = '/play · /stop · /bpm <n> · /open <f> · /save · /settings · /quit';
 
 export function runCommand(input: string, ctx: CommandContext): string {
   const trimmed = input.trim().replace(/^\//, '');
   if (!trimmed) return '';
   const [name = '', ...args] = trimmed.split(/\s+/);
   const cmd = name.toLowerCase();
+  // remainder after the command, preserving spaces (for file paths)
+  const arg = trimmed.slice(name.length).trim();
 
   const num = (label: string, fn: (n: number) => void, unit: string): string => {
     const n = Number(args[0]);
@@ -44,6 +49,15 @@ export function runCommand(input: string, ctx: CommandContext): string {
       return num('bpm', ctx.setBpm, ' bpm');
     case 'cps':
       return num('cps', ctx.setCps, ' cps');
+    case 'open':
+    case 'o':
+      return arg ? ctx.open(arg) : 'usage: /open <path>';
+    case 'save':
+    case 'w':
+      return ctx.save(arg || undefined);
+    case 'settings':
+    case 'config':
+      return ctx.openSettings();
     case 'quit':
     case 'q':
     case 'exit':

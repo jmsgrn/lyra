@@ -1,13 +1,15 @@
 /**
  * Top-level Ink app: a header whose top border carries the "lyra vX.Y.Z" title
- * (Claude-Code style) and whose body shows the transport/clock plus key hints,
- * the editor pane, a slash-command bar, and a status line.
+ * (plus the open filename) and whose body shows transport/clock + key hints,
+ * the editor pane, and a slash-command bar (which also shows status).
  *
- * Transport is driven by slash commands (/play, /stop, ...) rather than a key
- * chord; Ctrl+E evaluates and Tab focuses the command bar.
+ * Transport is driven by slash commands (/play, /stop, ...). Ctrl+E evaluates,
+ * Ctrl+S saves, Tab focuses the command bar.
  */
 import { createRequire } from 'node:module';
-import React, { useState } from 'react';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { basename, dirname, resolve } from 'node:path';
+import React, { useCallback, useRef, useState } from 'react';
 import { Box, Text, useApp } from 'ink';
 import { Editor } from './Editor.js';
 import { CommandBar } from './CommandBar.js';
@@ -16,6 +18,7 @@ import { useTerminalSize } from './useTerminalSize.js';
 import { runCommand, type CommandContext } from './commands.js';
 import { LOGO } from './logo.js';
 import { theme } from './theme.js';
+import { settingsError, settingsPath } from '../config/settings.js';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../../package.json') as { version: string };
@@ -33,6 +36,11 @@ const DEFAULT_CODE = `stack(
 
 type Mode = 'editor' | 'command';
 
+export interface AppProps {
+  filePath?: string;
+  initialCode?: string;
+}
+
 /** A rounded top border with an inline title: `╭─ lyra v0.0.0 ───────╮`. */
 function titleBorder(title: string, width: number): string {
   const label = ` ${title} `;
@@ -42,7 +50,7 @@ function titleBorder(title: string, width: number): string {
   return left + label + '─'.repeat(fill) + right;
 }
 
-export function App(): React.ReactElement {
+export function App({ filePath: initialFilePath, initialCode }: AppProps): React.ReactElement {
   const { exit } = useApp();
   const repl = useRepl();
   const { columns, rows } = useTerminalSize();
@@ -50,7 +58,59 @@ export function App(): React.ReactElement {
   // Leave one row of headroom so a trailing newline can't scroll the top off.
   const height = Math.max(10, rows - 1);
   const [mode, setMode] = useState<Mode>('editor');
-  const [commandResult, setCommandResult] = useState('');
+  const [commandResult, setCommandResult] = useState(settingsError ?? '');
+
+  // --- file / editor buffer state ---
+  const [filePath, setFilePath] = useState<string | undefined>(initialFilePath);
+  const [seedCode, setSeedCode] = useState<string>(initialCode ?? DEFAULT_CODE);
+  const [editorEpoch, setEditorEpoch] = useState(0); // bump to remount editor on open
+  const [dirty, setDirty] = useState(false);
+  const codeRef = useRef(seedCode);
+  const savedRef = useRef(seedCode);
+
+  const onCodeChange = useCallback((text: string) => {
+    codeRef.current = text;
+    setDirty(text !== savedRef.current);
+  }, []);
+
+  const openFile = useCallback((path: string): string => {
+    const target = resolve(path);
+    let content = '';
+    try {
+      content = readFileSync(target, 'utf8');
+    } catch (err) {
+      const e = err as NodeJS.ErrnoException;
+      if (e.code !== 'ENOENT') return `open failed: ${e.message}`;
+      // ENOENT → treat as a new, empty file
+    }
+    setSeedCode(content);
+    codeRef.current = content;
+    savedRef.current = content;
+    setFilePath(target);
+    setDirty(false);
+    setEditorEpoch((n) => n + 1);
+    return `opened ${basename(target)}`;
+  }, []);
+
+  const saveFile = useCallback(
+    (path?: string): string => {
+      const target = path ? resolve(path) : filePath;
+      if (!target) return 'no file — use /save <path>';
+      try {
+        mkdirSync(dirname(target), { recursive: true });
+        writeFileSync(target, codeRef.current);
+      } catch (err) {
+        return `save failed: ${(err as Error).message}`;
+      }
+      savedRef.current = codeRef.current;
+      setFilePath(target);
+      setDirty(false);
+      return `saved ${basename(target)}`;
+    },
+    [filePath],
+  );
+
+  const openSettings = useCallback((): string => openFile(settingsPath), [openFile]);
 
   const started = repl.state.started === true;
   const error = repl.state.error;
@@ -63,6 +123,9 @@ export function App(): React.ReactElement {
     toggle: repl.toggle,
     setCps: repl.setCps,
     setBpm: (bpm) => repl.setCps(bpmToCps(bpm)),
+    open: openFile,
+    save: saveFile,
+    openSettings,
     quit: exit,
   };
 
@@ -82,13 +145,18 @@ export function App(): React.ReactElement {
         cps={repl.cps}
         cycle={repl.cycle}
         phase={repl.phase}
+        file={filePath ? basename(filePath) : undefined}
+        dirty={dirty}
       />
       <Editor
+        key={editorEpoch}
         width={width}
         active={mode === 'editor'}
-        initialCode={DEFAULT_CODE}
+        initialCode={seedCode}
         onEvaluate={repl.evaluate}
         onFocusCommand={() => setMode('command')}
+        onChange={onCodeChange}
+        onSave={() => setCommandResult(saveFile())}
         onQuit={exit}
       />
       <CommandBar
@@ -112,13 +180,26 @@ interface HeaderProps {
   cps: number;
   cycle: number;
   phase: string;
+  file?: string;
+  dirty: boolean;
 }
 
-function Header({ version, width, mode, started, cps, cycle, phase }: HeaderProps): React.ReactElement {
+function Header({
+  version,
+  width,
+  mode,
+  started,
+  cps,
+  cycle,
+  phase,
+  file,
+  dirty,
+}: HeaderProps): React.ReactElement {
   const bpm = Math.round(cpsToBpm(cps));
+  const title = `lyra v${version}${file ? ` · ${file}${dirty ? ' ●' : ''}` : ''}`;
   return (
     <Box flexDirection="column" width={width}>
-      <Text color={theme.header}>{titleBorder(`lyra v${version}`, width)}</Text>
+      <Text color={theme.header}>{titleBorder(title, width)}</Text>
       <Box
         borderStyle="round"
         borderTop={false}
@@ -154,8 +235,8 @@ function KeyHints({ mode }: { mode: Mode }): React.ReactElement {
   }
   return (
     <Text color={theme.muted}>
-      <Text color={theme.key}>Ctrl+E</Text> eval · <Text color={theme.key}>Tab</Text> cmd ·{' '}
-      <Text color={theme.key}>Ctrl+Q</Text> quit
+      <Text color={theme.key}>Ctrl+E</Text> eval · <Text color={theme.key}>Ctrl+S</Text> save ·{' '}
+      <Text color={theme.key}>Tab</Text> cmd · <Text color={theme.key}>Ctrl+Q</Text> quit
     </Text>
   );
 }

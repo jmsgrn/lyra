@@ -6,7 +6,7 @@
  * (eval, toggle transport, focus command bar, quit) are forwarded to the parent.
  * Only receives input while `active`.
  */
-import React, { useReducer, useRef } from 'react';
+import React, { useEffect, useReducer, useRef } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { bufferText, createBuffer, reduce, type Buffer, type EditAction } from './editorBuffer.js';
 import { theme } from './theme.js';
@@ -18,11 +18,13 @@ export interface EditorProps {
   active: boolean;
   onEvaluate: (code: string) => void;
   onFocusCommand: () => void;
+  onChange: (code: string) => void;
+  onSave: () => void;
   onQuit: () => void;
 }
 
 export function Editor(props: EditorProps): React.ReactElement {
-  const { initialCode, width, active, onEvaluate, onFocusCommand, onQuit } = props;
+  const { initialCode, width, active, onEvaluate, onFocusCommand, onChange, onSave, onQuit } = props;
   const color = active ? theme.editorActive : theme.borderInactive;
 
   const [buf, dispatch] = useReducer(
@@ -36,12 +38,20 @@ export function Editor(props: EditorProps): React.ReactElement {
   const bufRef = useRef(buf);
   bufRef.current = buf;
 
+  // Report buffer text upward so the parent can save it / track dirty state.
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  useEffect(() => {
+    onChangeRef.current(bufferText(buf));
+  }, [buf]);
+
   useInput(
     (input, key) => {
       // --- action chords ---
       if (key.ctrl && (input === 'e' || key.return)) {
         return onEvaluate(bufferText(bufRef.current));
       }
+      if (key.ctrl && input === 's') return onSave();
       if (key.ctrl && input === 'q') return onQuit();
       if (key.tab) return onFocusCommand();
 

@@ -6,9 +6,20 @@
  * available.
  */
 import './silence.js'; // must be first: patches console before noisy imports load
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import React from 'react';
 import { render } from 'ink';
 import { App } from './tui/App.js';
+
+// `lyra [file]` opens that file in the editor (a missing path = a new file).
+const fileArg = process.argv.slice(2).find((a) => !a.startsWith('-'));
+let filePath: string | undefined;
+let initialCode: string | undefined;
+if (fileArg) {
+  filePath = resolve(fileArg);
+  initialCode = existsSync(filePath) ? readFileSync(filePath, 'utf8') : '';
+}
 
 // Use the terminal's alternate screen buffer (like vim/htop) so a full-height
 // layout fills the screen cleanly instead of overflowing the scrollback.
@@ -31,7 +42,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const { waitUntilExit } = render(<App />);
+const { waitUntilExit } = render(<App filePath={filePath} initialCode={initialCode} />);
 await waitUntilExit();
 restore();
 // node-web-audio-api keeps a native audio thread alive, so the event loop

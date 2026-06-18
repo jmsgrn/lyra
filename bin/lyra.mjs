@@ -20,12 +20,14 @@ if (args.includes('--help') || args.includes('-h')) {
     [
       'lyra — local TUI live-coding music environment',
       '',
-      'usage: lyra',
+      'usage: lyra [file]        open [file] in the editor (created on save)',
       '',
-      '  Ctrl+E   evaluate          Tab     focus command bar',
-      '  Ctrl+Q   quit              arrows  move cursor',
+      '  Ctrl+E  evaluate     Ctrl+S  save      Tab     focus command bar',
+      '  Ctrl+Q  quit         arrows  move cursor',
       '',
-      '  commands: /play  /stop  /bpm <n>  /cps <n>  /help',
+      '  commands: /play /stop /bpm <n> /cps <n> /open <f> /save /settings /help',
+      '',
+      '  settings: ~/.config/lyra/settings.json  (or run /settings)',
     ].join('\n'),
   );
   process.exit(0);

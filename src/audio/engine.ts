@@ -6,6 +6,10 @@
  * superdough expects and makes scheduled source nodes idempotent (see
  * webaudio-shim.ts).
  */
+import { readdirSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { basename, extname, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import './webaudio-shim.js';
 import './fetch-file.js'; // enable file:// fetch so superdough can load local samples
 import { AudioContext, type NodeAudioContext } from './webaudio-shim.js';
@@ -137,6 +141,36 @@ export async function loadSamples(
 ): Promise<void> {
   if (!ready) await initEngine();
   await sd.samples(map, baseUrl);
+}
+
+const AUDIO_EXTENSIONS = new Set(['.wav', '.flac', '.ogg', '.mp3', '.aif', '.aiff', '.m4a']);
+
+/**
+ * Load a sample source by path/URL. A directory becomes a sample map (each
+ * audio file's basename is a sound name); a `.json` file/URL or an http(s) URL
+ * is loaded as a strudel.json sample map. Returns the sound names registered.
+ */
+export async function loadSampleSource(source: string): Promise<string[]> {
+  const expanded = source.startsWith('~') ? join(homedir(), source.slice(1)) : source;
+  if (/^https?:\/\//.test(expanded) || expanded.endsWith('.json')) {
+    const url = /^[a-z]+:\/\//i.test(expanded) ? expanded : pathToFileURL(resolve(expanded)).href;
+    await loadSamples(url);
+    return [];
+  }
+
+  const dir = resolve(expanded);
+  const baseUrl = pathToFileURL(join(dir, '/')).href;
+  const map: Record<string, string[]> = {};
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isFile()) continue;
+    const ext = extname(entry.name).toLowerCase();
+    if (!AUDIO_EXTENSIONS.has(ext)) continue;
+    const name = basename(entry.name, ext);
+    (map[name] ??= []).push(entry.name);
+  }
+  const names = Object.keys(map);
+  if (names.length > 0) await loadSamples(map, baseUrl);
+  return names;
 }
 
 export async function closeEngine(): Promise<void> {
