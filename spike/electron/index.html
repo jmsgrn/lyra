@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>lyra · Phase-0 spike</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; background: #0b0b10; color: #cdd0d6;
+        font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      #app { display: grid; grid-template-rows: auto 1fr auto; height: 100%; }
+      header { display: flex; align-items: center; gap: 12px; padding: 8px 12px;
+        border-bottom: 1px solid #23232e; }
+      header h1 { font-size: 13px; margin: 0; color: #d98a5b; letter-spacing: .5px; }
+      header .spacer { flex: 1; }
+      button { font: inherit; background: #1a1a24; color: #cdd0d6; border: 1px solid #34343f;
+        border-radius: 6px; padding: 5px 12px; cursor: pointer; }
+      button:hover { background: #23232e; }
+      button.primary { border-color: #4a7a4a; color: #9fe09f; }
+      main { display: grid; grid-template-columns: 1fr 1fr; min-height: 0; }
+      #editor { border-right: 1px solid #23232e; min-height: 0; overflow: auto; }
+      #viz-wrap { position: relative; min-height: 0; }
+      #viz { width: 100%; height: 100%; display: block; }
+      #badge { position: absolute; top: 8px; right: 10px; padding: 3px 8px; border-radius: 6px;
+        font-size: 11px; background: #1a1a24cc; border: 1px solid #34343f; }
+      footer { border-top: 1px solid #23232e; padding: 6px 12px; height: 168px; overflow: auto;
+        white-space: pre-wrap; color: #8b8f99; }
+      footer .pass { color: #9fe09f; } footer .fail { color: #e08f8f; }
+      footer .info { color: #8b8f99; } footer .head { color: #d98a5b; }
+      .cm-editor { height: 100%; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>🎶 lyra · Phase-0 spike</h1>
+        <span id="status">booting…</span>
+        <span class="spacer"></span>
+        <button id="eval">Eval (Ctrl+E)</button>
+        <button id="play" class="primary">▶ Play</button>
+        <button id="stop">■ Stop</button>
+      </header>
+      <main>
+        <div id="editor"></div>
+        <div id="viz-wrap">
+          <canvas id="viz"></canvas>
+          <span id="badge">idle</span>
+        </div>
+      </main>
+      <footer id="log"></footer>
+    </div>
+    <script type="module" src="/renderer.ts"></script>
+  </body>
+</html>
