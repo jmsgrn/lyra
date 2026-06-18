@@ -7,6 +7,7 @@
  * webaudio-shim.ts).
  */
 import './webaudio-shim.js';
+import './fetch-file.js'; // enable file:// fetch so superdough can load local samples
 import { AudioContext, type NodeAudioContext } from './webaudio-shim.js';
 import * as sd from 'superdough';
 
@@ -122,6 +123,20 @@ export function trigger(
 /** Silence any sustained global effects (panic / hush helper). */
 export function resetEffects(): void {
   sdAny.resetGlobalEffects?.();
+}
+
+/**
+ * Register a superdough sample map so `s("name")` can play it. `map` is either
+ * a `{ name: ['file.wav', ...] }` object (with `baseUrl` prepended) or a URL to
+ * a strudel.json sample map. Local packs use file:// URLs (see fetch-file).
+ * Samples are fetched/decoded lazily on first trigger.
+ */
+export async function loadSamples(
+  map: Record<string, unknown> | string,
+  baseUrl?: string,
+): Promise<void> {
+  if (!ready) await initEngine();
+  await sd.samples(map, baseUrl);
 }
 
 export async function closeEngine(): Promise<void> {

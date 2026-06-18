@@ -15,6 +15,7 @@
     "spike:superdough": "tsx src/spike/superdough.ts",
     "spike:strudel": "tsx src/spike/strudel.ts",
     "spike:repl": "tsx src/spike/repl.ts",
+    "spike:samples": "node scripts/run.mjs tsx src/spike/samples.ts",
     "start": "node scripts/run.mjs tsx src/main.tsx",
     "dev": "node scripts/run.mjs tsx watch src/main.tsx",
     "typecheck": "tsc --noEmit",
