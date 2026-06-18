@@ -20,7 +20,7 @@ const checks: Record<string, boolean> = {
   transport: frame.includes('stopped') || frame.includes('playing'),
   clock: frame.includes('cps') && frame.includes('bpm') && frame.includes('cycle'),
   gutter: frame.includes(' 1 '),
-  defaultCode: frame.includes('sawtooth'),
+  defaultCode: frame.includes('stack(') && frame.includes('note('),
   commandBar: frame.includes('❯'),
   hints: frame.includes('eval') && frame.includes('cmd') && frame.includes('quit'),
 };

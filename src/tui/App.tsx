@@ -34,9 +34,10 @@ const cpsToBpm = (cps: number): number => cps * 60 * BEATS_PER_CYCLE;
 const bpmToCps = (bpm: number): number => bpm / (60 * BEATS_PER_CYCLE);
 
 const DEFAULT_CODE = `stack(
-  note("c2 eb2 g2 bb2").s("sawtooth").cutoff(800),
-  note("<c4 eb4 g4>/2").s("triangle").gain(.4),
-  s("white*8").gain(.08).decay(.03)
+  // clean tones — a good test for audio quality
+  note("c2 [eb2 g2] c2 g1").s("sine").gain(.55).release(.12),
+  note("<c4 eb4 g4 c5>").s("triangle").gain(.35).slow(2).release(.2),
+  note("<[c3,eb3,g3] [g2,bb2,d3]>").s("sine").gain(.18).slow(2).attack(.05).release(.5)
 )`;
 
 type Mode = 'editor' | 'command';
