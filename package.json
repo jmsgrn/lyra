@@ -24,7 +24,6 @@
     "@strudel/core": "^1.1.0",
     "@strudel/mini": "^1.1.0",
     "@strudel/transpiler": "^1.1.0",
-    "figlet": "^1.11.0",
     "ink": "^7.1.0",
     "node-web-audio-api": "^1.0.4",
     "react": "^19.2.7",
