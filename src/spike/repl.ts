@@ -5,11 +5,10 @@
  * This is tasks "audio core" + "strudel integration" proven together, using
  * exactly the code paths the TUI will drive.
  */
-import { createRepl } from '../strudel/repl.js';
-import { closeEngine, hasWorklets } from '../audio/engine.js';
+import { createNodeEngine, closeNodeEngine, hasWorklets } from '../platform/node.js';
 
 let firstTrigger = true;
-const repl = await createRepl({
+const repl = await createNodeEngine({
   onError: (err) => console.error('[repl] eval error:', err instanceof Error ? err.message : err),
   onUpdate: (state) => {
     if (state.error) console.error('[repl] state error:', state.error);
@@ -34,5 +33,5 @@ console.log(`[repl] started=${repl.state.started} — playing ~4s`);
 
 await new Promise((r) => setTimeout(r, 4000));
 repl.stop();
-await closeEngine();
+await closeNodeEngine();
 console.log('Spike D complete: live-eval + Cyclist scheduler + superdough pipeline OK.');

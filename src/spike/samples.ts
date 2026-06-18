@@ -7,8 +7,7 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { createRepl } from '../strudel/repl.js';
-import { loadSamples, closeEngine } from '../audio/engine.js';
+import { createNodeEngine, loadSamples, closeNodeEngine } from '../platform/node.js';
 import { encodeWav, sineChannel } from '../audio/wav.js';
 
 // --- generate a tiny local sample pack ---
@@ -21,7 +20,7 @@ const baseUrl = pathToFileURL(join(dir, '/')).href; // file:///.../lyra-spike-sa
 console.log('[samples] pack at', baseUrl);
 
 // --- bring up the repl and register the local pack ---
-const repl = await createRepl({
+const repl = await createNodeEngine({
   onError: (err) => console.error('[repl] eval error:', err instanceof Error ? err.message : err),
 });
 await loadSamples({ bleep: ['bleep.wav'], boop: ['boop.wav'] }, baseUrl);
@@ -35,5 +34,5 @@ console.log('[samples] playing s("bleep boop ...") for ~4s');
 
 await new Promise((r) => setTimeout(r, 4000));
 repl.stop();
-await closeEngine();
+await closeNodeEngine();
 console.log('Spike E complete: local sample loading + playback works.');

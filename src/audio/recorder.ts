@@ -8,7 +8,7 @@
  * wrapper does) to keep our own code fully typed.
  */
 import * as nwa from 'node-web-audio-api';
-import { getContext } from './engine.js';
+import { getNodeContext } from '../platform/node.js';
 
 interface MicTrack {
   stop?(): void;
@@ -70,7 +70,7 @@ export function isRecording(): boolean {
 /** Begin capturing mono mic input. Throws if mic access is unavailable. */
 export async function startRecording(): Promise<void> {
   if (session) return;
-  const ctx = getContext() as unknown as RecordingContext;
+  const ctx = getNodeContext() as unknown as RecordingContext;
   const stream = await mediaDevices.getUserMedia({ audio: true });
   const source = ctx.createMediaStreamSource(stream);
   const processor = ctx.createScriptProcessor(4096, 1, 1);

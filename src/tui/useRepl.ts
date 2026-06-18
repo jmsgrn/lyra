@@ -5,8 +5,8 @@
  * surfaces engine state + a human-readable status line for the UI.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createRepl, type LyraRepl, type ReplState } from '../strudel/repl.js';
-import { closeEngine, loadSampleSource } from '../audio/engine.js';
+import { createNodeEngine, closeNodeEngine, loadSampleSource, type NodeEngine } from '../platform/node.js';
+import type { ReplState } from '../core/types.js';
 import { settings } from '../config/settings.js';
 import { recordingsDir } from '../config/paths.js';
 
@@ -31,7 +31,7 @@ export interface ReplApi {
 }
 
 export function useRepl(): ReplApi {
-  const replRef = useRef<LyraRepl | null>(null);
+  const replRef = useRef<NodeEngine | null>(null);
   // Whether a pattern has been evaluated at least once. The scheduler throws
   // ("no pattern set") if started before that, so play/toggle guard on it.
   const patternSetRef = useRef(false);
@@ -43,7 +43,7 @@ export function useRepl(): ReplApi {
 
   useEffect(() => {
     let mounted = true;
-    createRepl({
+    createNodeEngine({
       onUpdate: (s) => mounted && setState({ ...s }),
       onError: (err) => mounted && setStatus(`eval error: ${msg(err)}`),
     })
@@ -74,7 +74,7 @@ export function useRepl(): ReplApi {
       } catch {
         /* ignore */
       }
-      void closeEngine();
+      void closeNodeEngine();
     };
   }, []);
 

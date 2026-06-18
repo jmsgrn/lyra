@@ -21,7 +21,7 @@ import { LOGO } from './logo.js';
 import { theme } from './theme.js';
 import { settingsError, settingsPath } from '../config/settings.js';
 import { recordingsDir } from '../config/paths.js';
-import { loadSamples } from '../audio/engine.js';
+import { loadSamples } from '../platform/node.js';
 import { encodeWav } from '../audio/wav.js';
 import * as recorder from '../audio/recorder.js';
 

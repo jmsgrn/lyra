@@ -7,12 +7,11 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { createRepl } from '../strudel/repl.js';
-import { closeEngine, loadSamples } from '../audio/engine.js';
+import { createNodeEngine, closeNodeEngine, loadSamples } from '../platform/node.js';
 import { encodeWav } from '../audio/wav.js';
 import * as recorder from '../audio/recorder.js';
 
-const repl = await createRepl({
+const repl = await createNodeEngine({
   onError: (err) => console.error('[repl] eval error:', err instanceof Error ? err.message : err),
 });
 
@@ -21,7 +20,7 @@ try {
   await recorder.startRecording();
 } catch (err) {
   console.log('[rec] mic unavailable here:', (err as Error).message, '(expected in a headless env)');
-  await closeEngine();
+  await closeNodeEngine();
   process.exit(0);
 }
 
@@ -29,7 +28,7 @@ await new Promise((r) => setTimeout(r, 1500));
 const rec = recorder.stopRecording();
 if (!rec) {
   console.log('[rec] no audio captured');
-  await closeEngine();
+  await closeNodeEngine();
   process.exit(0);
 }
 console.log(`[rec] captured ${rec.durationSeconds.toFixed(2)}s @ ${rec.sampleRate}Hz`);
@@ -45,5 +44,5 @@ repl.setCps(1);
 repl.start();
 await new Promise((r) => setTimeout(r, 2500));
 repl.stop();
-await closeEngine();
+await closeNodeEngine();
 console.log('Spike F complete: record -> save -> register -> playback works.');
