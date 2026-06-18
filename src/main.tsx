@@ -5,6 +5,7 @@
  * the process uses PipeWire's JACK backend (clean, low-latency audio) when
  * available.
  */
+import './silence.js'; // must be first: patches console before noisy imports load
 import React from 'react';
 import { render } from 'ink';
 import { App } from './tui/App.js';

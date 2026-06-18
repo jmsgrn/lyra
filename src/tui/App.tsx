@@ -12,7 +12,7 @@ import { Box, Text, useApp } from 'ink';
 import { Editor } from './Editor.js';
 import { CommandBar } from './CommandBar.js';
 import { useRepl } from './useRepl.js';
-import { useColumns } from './useTerminalSize.js';
+import { useTerminalSize } from './useTerminalSize.js';
 import { runCommand, type CommandContext } from './commands.js';
 
 const require = createRequire(import.meta.url);
@@ -43,7 +43,7 @@ function titleBorder(title: string, width: number): string {
 export function App(): React.ReactElement {
   const { exit } = useApp();
   const repl = useRepl();
-  const columns = useColumns();
+  const { columns, rows } = useTerminalSize();
   const width = Math.max(24, columns - 2); // App applies paddingX={1}
   const [mode, setMode] = useState<Mode>('editor');
   const [commandResult, setCommandResult] = useState('');
@@ -66,7 +66,7 @@ export function App(): React.ReactElement {
   };
 
   return (
-    <Box flexDirection="column" paddingX={1}>
+    <Box flexDirection="column" paddingX={1} height={rows}>
       <Header
         version={version}
         width={width}
@@ -84,6 +84,7 @@ export function App(): React.ReactElement {
         onFocusCommand={() => setMode('command')}
         onQuit={exit}
       />
+      <Footer status={repl.status} error={error} />
       <CommandBar
         active={mode === 'command'}
         result={commandResult}
@@ -92,7 +93,6 @@ export function App(): React.ReactElement {
         onCancel={() => setMode('editor')}
         onQuit={exit}
       />
-      <Footer status={repl.status} error={error} />
     </Box>
   );
 }

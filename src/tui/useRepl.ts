@@ -49,7 +49,7 @@ export function useRepl(): ReplApi {
         if (!mounted) return;
         replRef.current = repl;
         setPhase('ready');
-        setStatus('ready — Ctrl+E to play');
+        setStatus('ready');
       })
       .catch((err) => {
         if (!mounted) return;
