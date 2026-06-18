@@ -161,7 +161,13 @@ export async function loadSampleSource(source: string): Promise<string[]> {
   const dir = resolve(expanded);
   const baseUrl = pathToFileURL(join(dir, '/')).href;
   const map: Record<string, string[]> = {};
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return []; // directory doesn't exist / unreadable — nothing to load
+  }
+  for (const entry of entries) {
     if (!entry.isFile()) continue;
     const ext = extname(entry.name).toLowerCase();
     if (!AUDIO_EXTENSIONS.has(ext)) continue;

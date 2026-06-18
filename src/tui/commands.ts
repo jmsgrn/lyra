@@ -12,10 +12,12 @@ export interface CommandContext {
   open: (path: string) => string;
   save: (path?: string) => string;
   openSettings: () => string;
+  record: (name: string) => string;
   quit: () => void;
 }
 
-export const COMMAND_HELP = '/play · /stop · /bpm <n> · /open <f> · /save · /settings · /quit';
+export const COMMAND_HELP =
+  '/play · /stop · /bpm <n> · /rec <name> · /open <f> · /save · /settings · /quit';
 
 export function runCommand(input: string, ctx: CommandContext): string {
   const trimmed = input.trim().replace(/^\//, '');
@@ -58,6 +60,9 @@ export function runCommand(input: string, ctx: CommandContext): string {
     case 'settings':
     case 'config':
       return ctx.openSettings();
+    case 'rec':
+    case 'record':
+      return ctx.record(arg);
     case 'quit':
     case 'q':
     case 'exit':

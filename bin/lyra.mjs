@@ -25,7 +25,7 @@ if (args.includes('--help') || args.includes('-h')) {
       '  Ctrl+E  evaluate     Ctrl+S  save      Tab     focus command bar',
       '  Ctrl+Q  quit         arrows  move cursor',
       '',
-      '  commands: /play /stop /bpm <n> /cps <n> /open <f> /save /settings /help',
+      '  commands: /play /stop /bpm <n> /rec <name> /open <f> /save /settings /help',
       '',
       '  settings: ~/.config/lyra/settings.json  (or run /settings)',
     ].join('\n'),

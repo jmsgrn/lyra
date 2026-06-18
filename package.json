@@ -16,6 +16,7 @@
     "spike:strudel": "tsx src/spike/strudel.ts",
     "spike:repl": "tsx src/spike/repl.ts",
     "spike:samples": "node scripts/run.mjs tsx src/spike/samples.ts",
+    "spike:rec": "node scripts/run.mjs tsx src/spike/rec.ts",
     "start": "node scripts/run.mjs tsx src/main.tsx",
     "dev": "node scripts/run.mjs tsx watch src/main.tsx",
     "typecheck": "tsc --noEmit",

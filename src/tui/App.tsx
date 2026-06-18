@@ -8,7 +8,8 @@
  */
 import { createRequire } from 'node:module';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import React, { useCallback, useRef, useState } from 'react';
 import { Box, Text, useApp } from 'ink';
 import { Editor } from './Editor.js';
@@ -19,6 +20,10 @@ import { runCommand, type CommandContext } from './commands.js';
 import { LOGO } from './logo.js';
 import { theme } from './theme.js';
 import { settingsError, settingsPath } from '../config/settings.js';
+import { recordingsDir } from '../config/paths.js';
+import { loadSamples } from '../audio/engine.js';
+import { encodeWav } from '../audio/wav.js';
+import * as recorder from '../audio/recorder.js';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../../package.json') as { version: string };
@@ -112,6 +117,41 @@ export function App({ filePath: initialFilePath, initialCode }: AppProps): React
 
   const openSettings = useCallback((): string => openFile(settingsPath), [openFile]);
 
+  // --- recording ---
+  const [recName, setRecName] = useState<string | null>(null);
+
+  const saveRecording = useCallback(async (name: string, rec: recorder.Recording): Promise<string> => {
+    mkdirSync(recordingsDir, { recursive: true });
+    const file = `${name}.wav`;
+    writeFileSync(join(recordingsDir, file), encodeWav(rec.channels, rec.sampleRate));
+    await loadSamples({ [name]: [file] }, pathToFileURL(join(recordingsDir, '/')).href);
+    return `saved "${name}" (${rec.durationSeconds.toFixed(1)}s) — play s("${name}")`;
+  }, []);
+
+  const record = useCallback(
+    (arg: string): string => {
+      if (recorder.isRecording()) {
+        const rec = recorder.stopRecording();
+        const name = recName ?? 'rec';
+        setRecName(null);
+        if (!rec) return 'recording was empty';
+        saveRecording(name, rec)
+          .then((m) => setCommandResult(m))
+          .catch((e) => setCommandResult(`rec save failed: ${(e as Error).message}`));
+        return `saving "${name}"…`;
+      }
+      const name = arg.trim().replace(/[^a-zA-Z0-9_-]/g, '');
+      if (!name) return 'usage: /rec <name>';
+      setRecName(name);
+      recorder.startRecording().catch((e) => {
+        setRecName(null);
+        setCommandResult(`rec failed: ${(e as Error).message}`);
+      });
+      return `● recording "${name}" — /rec to stop`;
+    },
+    [recName, saveRecording],
+  );
+
   const started = repl.state.started === true;
   const error = repl.state.error;
   const errText = error ? (error instanceof Error ? error.message : String(error)) : undefined;
@@ -126,6 +166,7 @@ export function App({ filePath: initialFilePath, initialCode }: AppProps): React
     open: openFile,
     save: saveFile,
     openSettings,
+    record,
     quit: exit,
   };
 
@@ -147,6 +188,7 @@ export function App({ filePath: initialFilePath, initialCode }: AppProps): React
         phase={repl.phase}
         file={filePath ? basename(filePath) : undefined}
         dirty={dirty}
+        recording={recName}
       />
       <Editor
         key={editorEpoch}
@@ -182,6 +224,7 @@ interface HeaderProps {
   phase: string;
   file?: string;
   dirty: boolean;
+  recording: string | null;
 }
 
 function Header({
@@ -194,6 +237,7 @@ function Header({
   phase,
   file,
   dirty,
+  recording,
 }: HeaderProps): React.ReactElement {
   const bpm = Math.round(cpsToBpm(cps));
   const title = `lyra v${version}${file ? ` · ${file}${dirty ? ' ●' : ''}` : ''}`;
@@ -211,9 +255,13 @@ function Header({
       >
         <Text color={theme.header}>{LOGO}</Text>
         <Box flexDirection="column" alignItems="flex-end">
-          <Text color={started ? theme.playing : theme.stopped}>
-            {started ? '● playing' : '○ stopped'}
-          </Text>
+          {recording ? (
+            <Text color={theme.error}>● rec {recording}</Text>
+          ) : (
+            <Text color={started ? theme.playing : theme.stopped}>
+              {started ? '● playing' : '○ stopped'}
+            </Text>
+          )}
           <Text color={theme.muted}>
             {cps.toFixed(2)} cps · {bpm} bpm · cycle {Math.floor(cycle)}
             {phase !== 'ready' ? ` · ${phase}` : ''}

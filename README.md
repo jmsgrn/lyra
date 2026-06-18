@@ -63,7 +63,11 @@ lyra set.lyra     # open (or create) a file in the editor
 ```
 
 Keys: **Ctrl+E** eval · **Ctrl+S** save · **Tab** command bar · **Ctrl+Q** quit.
-Commands: `/play` `/stop` `/bpm <n>` `/cps <n>` `/open <file>` `/save` `/settings` `/help`.
+Commands: `/play` `/stop` `/bpm <n>` `/cps <n>` `/rec <name>` `/open <file>` `/save` `/settings` `/help`.
+
+Recording: `/rec <name>` captures the mic, `/rec` again stops and saves it to
+`~/.local/share/lyra/samples/<name>.wav`, registered so `s("<name>")` plays it
+(and auto-loaded on future launches).
 
 ## Configuration
 
@@ -93,8 +97,10 @@ Other smoke tests:
 - [x] Headless audio: superdough on node-web-audio-api
 - [x] Strudel pattern engine + Cyclist scheduler wired to audio
 - [x] Ink TUI: editor pane, eval/transport keybindings, live status
+- [x] Settings (`~/.config/lyra/settings.json`) + open/save files
+- [x] Audio sampling: load sample folders + record from mic (`/rec <name>`)
 - [ ] Default sound library (drum machines + sample packs)
-- [ ] Audio sampling: load sample folders + record from mic/line input
+- [ ] TUI visualizations (code highlight, scope/spectrum, pianoroll)
 - [ ] Latency/buffer tuning (eliminate xruns)
 
 ## Credits
