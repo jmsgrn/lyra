@@ -14,6 +14,7 @@ import './webaudio-shim.js';
 import './fetch-file.js'; // enable file:// fetch so superdough can load local samples
 import { AudioContext, type NodeAudioContext } from './webaudio-shim.js';
 import * as sd from 'superdough';
+import { settings } from '../config/settings.js';
 
 /** A subset of the control params superdough understands; open-ended on purpose. */
 export interface SoundParams {
@@ -49,7 +50,7 @@ const sdAny = sd as unknown as {
 /** Initialise the audio engine. Idempotent. */
 export async function initEngine(opts: EngineOptions = {}): Promise<void> {
   if (ready) return;
-  ctx = new AudioContext({ latencyHint: opts.latencyHint ?? 'playback' });
+  ctx = new AudioContext({ latencyHint: opts.latencyHint ?? settings.audio.latencyHint });
 
   // Make superdough use our context instead of lazily constructing its own
   // (which would omit latencyHint and fail to open the device).

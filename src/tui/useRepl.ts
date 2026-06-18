@@ -88,11 +88,13 @@ export function useRepl(): ReplApi {
       if (typeof scheduler.cps === 'number') setCpsState(scheduler.cps);
       try {
         const n = scheduler.now?.();
-        if (typeof n === 'number' && Number.isFinite(n)) setCycle(n);
+        // store the whole-cycle integer so the header only re-renders once per
+        // cycle (not continuously) — fewer renders = less audio-thread jitter.
+        if (typeof n === 'number' && Number.isFinite(n)) setCycle(Math.floor(n));
       } catch {
         /* scheduler not running yet */
       }
-    }, 100);
+    }, 250);
     return () => clearInterval(id);
   }, []);
 

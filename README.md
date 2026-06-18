@@ -78,9 +78,15 @@ in-app). They deep-merge over the defaults — set only what you want to change:
 {
   "theme": { "header": "#d98a5b", "editorActive": "cyan", "command": "yellow" },
   "tempo": { "cps": 0.5 },
+  "audio": { "latencyHint": "playback", "pipewireLatency": "1024/48000" },
   "samples": ["~/samples/my-drum-machine"]
 }
 ```
+
+**Crackly / crunchy audio?** That's buffer underruns. On PipeWire, lyra pins its
+buffer via `audio.pipewireLatency` (default `1024/48000` ≈ 21 ms). If it still
+crackles, raise it to `2048/48000` (more headroom, a touch more latency). The
+value is `frames/rate`.
 
 Other smoke tests:
 

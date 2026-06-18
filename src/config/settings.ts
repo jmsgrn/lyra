@@ -20,10 +20,22 @@ export interface ThemeSettings {
   error: string;
 }
 
+export interface AudioSettings {
+  /** node-web-audio-api latency hint (ALSA backend). 'playback' avoids crunch. */
+  latencyHint: 'interactive' | 'balanced' | 'playback' | number;
+  /**
+   * PipeWire buffer hint for the launcher, e.g. "1024/48000". Pins lyra's
+   * quantum so PipeWire doesn't run the graph at a tiny buffer (= crackle).
+   * Bigger = cleaner but more latency. "" leaves it to the system.
+   */
+  pipewireLatency: string;
+}
+
 export interface Settings {
   theme: ThemeSettings;
   /** transport defaults */
   tempo: { cps: number };
+  audio: AudioSettings;
   /** sample sources to auto-load on startup: directories, or strudel.json paths/URLs */
   samples: string[];
 }
@@ -41,6 +53,7 @@ export const DEFAULT_SETTINGS: Settings = {
     error: 'red',
   },
   tempo: { cps: 0.5 },
+  audio: { latencyHint: 'playback', pipewireLatency: '1024/48000' },
   samples: [],
 };
 
