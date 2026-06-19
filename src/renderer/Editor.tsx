@@ -1,18 +1,23 @@
 /**
  * CodeMirror 6 editor pane (the target editor). Mounts once; the parent
- * replaces the document on file-open by bumping `docKey`, and can focus it via
- * the imperative ref. The theme lives in a Compartment so `/theme` switches it
- * live without remounting. App chords (eval/save/command/quit) are handled
- * globally in App, so the editor itself only does text editing + reports changes.
+ * replaces the document on file-open by bumping `docKey`, focuses it via the
+ * ref, and flashes the currently-sounding note ranges via `highlight()` (the
+ * Strudel-style live highlight). The theme lives in a Compartment so `/theme`
+ * switches it live. App chords are handled globally in App.
  */
 import { forwardRef, useEffect, useImperativeHandle, useRef, type ReactElement } from 'react';
 import { EditorView, basicSetup } from 'codemirror';
-import { keymap } from '@codemirror/view';
-import { Compartment } from '@codemirror/state';
+import { keymap, Decoration, type DecorationSet } from '@codemirror/view';
+import { Compartment, StateEffect, StateField } from '@codemirror/state';
 import { indentWithTab } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import { cmTheme } from './cmTheme.js';
 import type { Theme } from '../shared/themes.js';
+
+export interface HighlightRange {
+  from: number;
+  to: number;
+}
 
 export interface EditorProps {
   initialDoc: string;
@@ -24,19 +29,48 @@ export interface EditorProps {
 
 export interface EditorHandle {
   focus(): void;
+  /** flash the given character ranges as currently-sounding (Strudel highlight) */
+  highlight(ranges: HighlightRange[]): void;
 }
+
+// --- live-highlight extension (shared definitions) ---
+const setHighlights = StateEffect.define<HighlightRange[]>();
+const markDeco = Decoration.mark({ class: 'cm-hl' });
+const highlightField = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update(deco, tr) {
+    deco = deco.map(tr.changes);
+    for (const effect of tr.effects) {
+      if (effect.is(setHighlights)) {
+        const len = tr.state.doc.length;
+        const ranges = effect.value
+          .filter((r) => r.from >= 0 && r.to <= len && r.from < r.to)
+          .sort((a, b) => a.from - b.from)
+          .map((r) => markDeco.range(r.from, r.to));
+        deco = Decoration.set(ranges, true);
+      }
+    }
+    return deco;
+  },
+  provide: (f) => EditorView.decorations.from(f),
+});
 
 export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(props, ref): ReactElement {
   const parentRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const themeComp = useRef(new Compartment());
 
-  useImperativeHandle(ref, () => ({ focus: () => viewRef.current?.focus() }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      focus: () => viewRef.current?.focus(),
+      highlight: (ranges) => viewRef.current?.dispatch({ effects: setHighlights.of(ranges) }),
+    }),
+    [],
+  );
 
-  // Keep latest onChange in a ref so the long-lived listener reads the fresh one.
   const onChangeRef = useRef(props.onChange);
   onChangeRef.current = props.onChange;
-  // theme at construction time (the live-switch effect handles later changes)
   const themeRef = useRef(props.theme);
   themeRef.current = props.theme;
 
@@ -47,8 +81,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(prop
       extensions: [
         basicSetup,
         javascript(),
-        // capture Tab to indent so it doesn't fall through and shift focus
         keymap.of([indentWithTab]),
+        highlightField,
         EditorView.updateListener.of((u) => {
           if (u.docChanged) onChangeRef.current(u.state.doc.toString());
         }),
@@ -62,7 +96,6 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(prop
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.docKey]);
 
-  // live theme switch — reconfigure the compartment, no remount
   useEffect(() => {
     viewRef.current?.dispatch({ effects: themeComp.current.reconfigure(cmTheme(props.theme)) });
   }, [props.theme]);

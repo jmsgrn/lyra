@@ -7,10 +7,12 @@
  * (browser autoplay policy), so transport actions resume it first — that first
  * call happens inside a real user gesture (Ctrl+E / Play).
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
 import { createBrowserEngine, type BrowserEngine } from '../platform/browser.js';
-import type { ReplState } from '../core/types.js';
+import type { EngineEvent, ReplState } from '../core/types.js';
 import { lyra } from './ipc.js';
+
+const MAX_HAPS = 256; // recent events kept for visualizers
 
 const msg = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
@@ -28,6 +30,16 @@ export interface EngineApi {
   stop: () => void;
   setCps: (cps: number) => void;
   setStatus: (s: string) => void;
+  /** master analyser tap for visualizers (undefined until audio is up) */
+  getAnalyser: () => AnalyserNode | undefined;
+  /** audio-clock time, seconds */
+  now: () => number;
+  /** the running pattern, queryable for pianoroll/highlight visuals */
+  getPattern: () => unknown;
+  /** transport position in cycles (pianoroll/highlight time base) */
+  nowCycles: () => number;
+  /** recent scheduled events for visualizers (oldest→newest) */
+  hapsRef: MutableRefObject<EngineEvent[]>;
 }
 
 export function useEngine(initialCps: number): EngineApi {
@@ -39,6 +51,7 @@ export function useEngine(initialCps: number): EngineApi {
   const [state, setState] = useState<ReplState>({});
   const [cps, setCpsState] = useState(initialCps);
   const [cycle, setCycle] = useState(0);
+  const hapsRef = useRef<EngineEvent[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -53,6 +66,12 @@ export function useEngine(initialCps: number): EngineApi {
         }
         ref.current = engine;
         engine.setCps(initialCps);
+        // feed the visualizer hap ring buffer
+        engine.onEvent((e) => {
+          const haps = hapsRef.current;
+          haps.push(e);
+          if (haps.length > MAX_HAPS) haps.splice(0, haps.length - MAX_HAPS);
+        });
         setPhase('ready');
         setStatus('ready');
         // best-effort: auto-load configured sample folders + recordings
@@ -161,5 +180,27 @@ export function useEngine(initialCps: number): EngineApi {
     setCpsState(value);
   }, []);
 
-  return { phase, status, state, cps, cycle, evaluate, toggle, play, stop, setCps, setStatus };
+  const getAnalyser = useCallback(() => ref.current?.getAnalyser(), []);
+  const now = useCallback(() => ref.current?.now() ?? 0, []);
+  const getPattern = useCallback(() => ref.current?.getPattern(), []);
+  const nowCycles = useCallback(() => ref.current?.nowCycles() ?? 0, []);
+
+  return {
+    phase,
+    status,
+    state,
+    cps,
+    cycle,
+    evaluate,
+    toggle,
+    play,
+    stop,
+    setCps,
+    setStatus,
+    getAnalyser,
+    now,
+    getPattern,
+    nowCycles,
+    hapsRef,
+  };
 }

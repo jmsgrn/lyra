@@ -15,11 +15,13 @@ export interface CommandContext {
   record: (name: string) => string;
   /** switch the active theme by name (desktop app); optional per host */
   setTheme?: (name: string) => string;
+  /** switch/toggle the visualizer (desktop app); optional per host */
+  setViz?: (name: string) => string;
   quit: () => void;
 }
 
 export const COMMAND_HELP =
-  '/play · /stop · /bpm <n> · /rec <name> · /open <f> · /save · /theme <name> · /settings · /quit';
+  '/play · /stop · /bpm <n> · /rec <name> · /open <f> · /save · /theme <name> · /viz <name|off> · /settings · /quit';
 
 export function runCommand(input: string, ctx: CommandContext): string {
   const trimmed = input.trim().replace(/^\//, '');
@@ -62,6 +64,10 @@ export function runCommand(input: string, ctx: CommandContext): string {
     case 'theme':
       if (!ctx.setTheme) return 'theme: set "theme" in settings.json';
       return ctx.setTheme(arg);
+    case 'viz':
+    case 'visual':
+      if (!ctx.setViz) return 'viz: desktop app only';
+      return ctx.setViz(arg);
     case 'settings':
     case 'config':
       return ctx.openSettings();

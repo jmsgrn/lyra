@@ -28,6 +28,7 @@ const sdAny = sd as unknown as {
   samples: (map: unknown, baseUrl?: string) => Promise<void>;
   resetGlobalEffects?: () => void;
   superdough: (value: unknown, deadline: number, duration: number, cps?: number) => unknown;
+  getSuperdoughAudioController?: () => { output?: { destinationGain?: AudioNode } } | undefined;
 };
 
 interface StrudelRepl {
@@ -58,6 +59,19 @@ export interface Engine {
    * Returns an unsubscribe function.
    */
   onEvent(listener: (event: EngineEvent) => void): () => void;
+  /**
+   * An AnalyserNode tapping superdough's master output (for scope/spectrum
+   * visuals), or undefined if the output graph isn't up yet. Lazily created and
+   * reconnected if superdough rebuilds its output.
+   */
+  getAnalyser(): AnalyserNode | undefined;
+  /**
+   * The currently-evaluated Strudel pattern (queryable via `.queryArc(a, b)`
+   * for pianoroll/highlight visuals), or undefined before the first eval.
+   */
+  getPattern(): unknown;
+  /** Current transport position in CYCLES — the pianoroll/highlight time base. */
+  nowCycles(): number;
   /** Register a superdough sample map (`{ name: ['file.wav'] }` or a json URL). */
   loadSamples(map: Record<string, unknown> | string, baseUrl?: string): Promise<void>;
   /** Silence sustained global effects (panic / hush helper). */
@@ -153,6 +167,29 @@ export async function createEngine(opts: CreateEngineOptions): Promise<Engine> {
     }
   };
 
+  // Master-output analyser tap for visualizers. Reuses one AnalyserNode and
+  // (re)connects it if superdough rebuilds its output (reset).
+  let analyser: AnalyserNode | undefined;
+  let tappedMaster: AudioNode | undefined;
+  const getAnalyser = (): AnalyserNode | undefined => {
+    try {
+      const master = sdAny.getSuperdoughAudioController?.()?.output?.destinationGain;
+      if (!master) return analyser;
+      if (!analyser) {
+        analyser = (ctx as unknown as { createAnalyser(): AnalyserNode }).createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0.7;
+      }
+      if (tappedMaster !== master) {
+        master.connect(analyser as unknown as AudioNode);
+        tappedMaster = master;
+      }
+      return analyser;
+    } catch {
+      return analyser;
+    }
+  };
+
   const repl = (core as unknown as { repl: (cfg: Record<string, unknown>) => StrudelRepl }).repl({
     defaultOutput: trigger,
     getTime: now,
@@ -174,6 +211,17 @@ export async function createEngine(opts: CreateEngineOptions): Promise<Engine> {
     onEvent: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
+    },
+    getAnalyser,
+    getPattern: () =>
+      repl.state.pattern ?? (repl.scheduler as unknown as { pattern?: unknown }).pattern,
+    nowCycles: () => {
+      try {
+        const n = repl.scheduler.now();
+        return Number.isFinite(n) ? n : 0;
+      } catch {
+        return 0;
+      }
     },
     loadSamples: (map, baseUrl) => sdAny.samples(map, baseUrl),
     resetEffects: () => sdAny.resetGlobalEffects?.(),

@@ -9,6 +9,8 @@ import type { Settings } from '../shared/settings.js';
 import { resolveTheme, themeNames, type Theme } from '../shared/themes.js';
 import { Editor, type EditorHandle } from './Editor.js';
 import { CommandBar } from './CommandBar.js';
+import { useVisuals } from './useVisuals.js';
+import { vizNames } from './visualizers.js';
 import { useEngine } from './useEngine.js';
 import { lyra, type InitialState } from './ipc.js';
 
@@ -49,6 +51,8 @@ export function App({ initial, settings }: AppProps): ReactElement {
     set('--muted', a.muted);
     set('--border', a.borderInactive);
     set('--border-active', a.editorActive);
+    // translucent highlight from the accent (hex + alpha)
+    set('--hl', `${a.editorActive}55`);
   }, [theme]);
 
   const applyTheme = useCallback(
@@ -62,6 +66,38 @@ export function App({ initial, settings }: AppProps): ReactElement {
     },
     [theme.name],
   );
+
+  // --- visualizer ---
+  const [vizId, setVizId] = useState('pianoroll');
+  const [showViz, setShowViz] = useState(true);
+  const vizCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  const applyViz = useCallback(
+    (arg: string): string => {
+      const names = vizNames();
+      const name = arg.toLowerCase();
+      if (!name) return `viz: ${names.join(', ')} · current: ${showViz ? vizId : 'off'} (off to hide)`;
+      if (name === 'off' || name === 'hide' || name === 'none') {
+        setShowViz(false);
+        return 'viz: off';
+      }
+      if (name === 'on' || name === 'show') {
+        setShowViz(true);
+        return `viz: ${vizId}`;
+      }
+      if (!names.includes(name)) return `unknown viz "${name}" — try: ${names.join(', ')}, off`;
+      setVizId(name);
+      setShowViz(true);
+      return `viz: ${name}`;
+    },
+    [showViz, vizId],
+  );
+
+  const cycleViz = useCallback(() => {
+    const names = vizNames();
+    setShowViz(true);
+    setVizId((cur) => names[(names.indexOf(cur) + 1) % names.length] ?? cur);
+  }, []);
 
   // --- file / editor buffer state ---
   const [filePath, setFilePath] = useState<string | undefined>(initial.filePath);
@@ -127,8 +163,8 @@ export function App({ initial, settings }: AppProps): ReactElement {
   // Global app chords — work regardless of which pane has focus, and
   // preventDefault beats Chromium's own Ctrl+P (print) / Ctrl+S (save page).
   // Latest callbacks via ref so we subscribe once.
-  const chords = useRef({ evaluate: engine.evaluate, save: saveFile, focusCommand });
-  chords.current = { evaluate: engine.evaluate, save: saveFile, focusCommand };
+  const chords = useRef({ evaluate: engine.evaluate, save: saveFile, focusCommand, cycleViz });
+  chords.current = { evaluate: engine.evaluate, save: saveFile, focusCommand, cycleViz };
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if (!(e.ctrlKey || e.metaKey)) return;
@@ -145,11 +181,26 @@ export function App({ initial, settings }: AppProps): ReactElement {
       } else if (k === 'p') {
         e.preventDefault();
         chords.current.focusCommand();
+      } else if (k === 'g') {
+        e.preventDefault();
+        chords.current.cycleViz();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  // single rAF loop: query the pattern → highlight active notes + draw the viz
+  useVisuals({
+    engine,
+    canvasRef: vizCanvasRef,
+    editorRef,
+    vizId,
+    showViz,
+    highlight: true,
+    playing: engine.state.started === true,
+    theme,
+  });
 
   const ctx: CommandContext = {
     play: engine.play,
@@ -171,6 +222,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
     },
     record: () => 'recording lands in a later phase (Phase 4)',
     setTheme: applyTheme,
+    setViz: applyViz,
     quit: () => window.close(),
   };
 
@@ -204,12 +256,22 @@ export function App({ initial, settings }: AppProps): ReactElement {
             {engine.phase !== 'ready' ? ` · ${engine.phase}` : ''}
           </span>
           <span className="hints">
-            <b>Ctrl+E</b> eval · <b>Ctrl+S</b> save · <b>Ctrl+P</b> cmd · <b>Ctrl+Q</b> quit
+            <b>Ctrl+E</b> eval · <b>Ctrl+S</b> save · <b>Ctrl+P</b> cmd · <b>Ctrl+G</b> viz · <b>Ctrl+Q</b> quit
           </span>
         </div>
       </div>
 
-      <Editor key={docKey} ref={editorRef} docKey={docKey} theme={theme} initialDoc={seedDoc} onChange={onChange} />
+      <div className="workspace">
+        <Editor key={docKey} ref={editorRef} docKey={docKey} theme={theme} initialDoc={seedDoc} onChange={onChange} />
+        {showViz ? (
+          <div className="viz-wrap">
+            <canvas ref={vizCanvasRef} className="viz-canvas" />
+            <span className="viz-label" onClick={cycleViz} title="cycle visualizer">
+              {vizId} ▸
+            </span>
+          </div>
+        ) : null}
+      </div>
 
       <CommandBar
         ref={commandInputRef}

@@ -31,7 +31,7 @@ export default defineConfig({
   server: { port: 5190, strictPort: false, fs: { allow: [repoRoot] } },
   plugins: [jsToTs()],
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-dom/client', '@strudel/core', '@strudel/mini', '@strudel/transpiler', 'superdough', 'codemirror', '@codemirror/lang-javascript', '@codemirror/view', '@codemirror/commands', '@codemirror/state', '@codemirror/language', '@lezer/highlight'],
+    include: ['react', 'react-dom', 'react-dom/client', '@strudel/core', '@strudel/mini', '@strudel/transpiler', '@strudel/draw', 'superdough', 'codemirror', '@codemirror/lang-javascript', '@codemirror/view', '@codemirror/commands', '@codemirror/state', '@codemirror/language', '@lezer/highlight'],
   },
   build: {
     outDir: resolve(repoRoot, 'dist', 'renderer'),

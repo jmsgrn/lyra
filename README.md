@@ -65,17 +65,31 @@ In the app:
 
 - **Ctrl+E** (or **Ctrl+Enter**) — evaluate the buffer and hot-swap the pattern
 - **Ctrl+S** — save · **Ctrl+P** — focus the command bar · **Ctrl+Q** — quit
-- **Tab** indents in the editor
+- **Ctrl+G** — cycle the visualizer · **Tab** indents in the editor
 - Type a pattern, hit **Ctrl+E**, and it plays. Edit and re-evaluate to morph it live.
 
 ### Commands (command bar — Ctrl+P or click)
 
 ```
 /play  /stop  /bpm <n>  /cps <n>  /open <file>  /save  /theme <name>
-/settings  /rec <name>  /help
+/viz <name|off>  /settings  /rec <name>  /help
 ```
 
-A leading `/` is optional. `/theme` with no name lists the available themes.
+A leading `/` is optional. `/theme` and `/viz` with no name list the options.
+
+## Visuals
+
+Strudel-style, frame-locked to the audio clock:
+
+- **In-editor highlighting** — the notes light up in your code as they sound
+  (the events' source locations flash live).
+- **Pianoroll / punchcard** — the right-hand pane scrolls the pattern's notes
+  around a playhead (Strudel's own `@strudel/draw`).
+- **scope / spectrum** — extra analyser visualizers.
+
+Cycle the pane with **Ctrl+G**, the `/viz <name>` command, or by clicking the
+label; `/viz off` hides it (full-width editor). The visualizer set is a registry
+(`src/renderer/visualizers.ts`) — GPU/shader visualizers come next.
 
 ## Themes
 
@@ -133,7 +147,9 @@ via `audio.pipewireLatency` (default `1024/48000` ≈ 21 ms); raise it to
 - [x] Strudel pattern engine + Cyclist scheduler wired to audio
 - [x] Reusable platform-agnostic core (`src/core`) + node/browser bindings
 - [x] Desktop app (Electron): CodeMirror editor, transport, commands, file I/O, themes
-- [ ] Visual layer: scope / spectrogram / pianoroll, then WebGL shader visuals
+- [x] Visuals: live in-editor highlighting + pianoroll / punchcard (Strudel-style)
+- [ ] WebGL shader / Hydra-style audio-reactive visuals
+- [ ] Default sound library (drum machines + sample packs) so `s("bd")` just works
 - [ ] Sample browser + project explorer
 - [ ] Recording (desktop) + audio/video export
 - [ ] Unified `lyra` launcher + packaged builds (Win/Mac/Linux)

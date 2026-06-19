@@ -49,6 +49,16 @@ declare module '@strudel/mini' {
   export function h(...args: unknown[]): any;
 }
 
+declare module '@strudel/draw' {
+  // Imperative pianoroll painter — draws pre-queried haps into a 2D context.
+  export function drawPianoroll(options: Record<string, unknown>): void;
+  export function getDrawContext(id?: string): CanvasRenderingContext2D;
+  export function getPunchcardPainter(options?: Record<string, unknown>): (...args: unknown[]) => unknown;
+  // Anything else (Drawer, Framer, pianoroll, …) is reachable but untyped.
+  const _draw: Record<string, unknown>;
+  export default _draw;
+}
+
 declare module '@strudel/transpiler' {
   export function transpiler(code: string, options?: Record<string, unknown>): unknown;
   export function evaluate(code: string, options?: Record<string, unknown>): Promise<unknown>;
