@@ -63,3 +63,4 @@ await ctx.close();
 console.log(
   `Spike B complete: superdough initialized (worklets=${workletsEnabled}) and triggered events on node-web-audio-api.`,
 );
+process.exit(0); // node-web-audio-api keeps the audio thread alive; force exit

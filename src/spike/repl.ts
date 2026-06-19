@@ -35,3 +35,4 @@ await new Promise((r) => setTimeout(r, 4000));
 repl.stop();
 await closeNodeEngine();
 console.log('Spike D complete: live-eval + Cyclist scheduler + superdough pipeline OK.');
+process.exit(0); // node-web-audio-api keeps the audio thread alive; force exit

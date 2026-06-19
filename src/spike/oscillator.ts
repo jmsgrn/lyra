@@ -71,3 +71,4 @@ async function realtimePlayback(): Promise<void> {
 await offlineProof();
 await realtimePlayback();
 console.log('Spike A complete: native node-web-audio-api audio path works.');
+process.exit(0); // node-web-audio-api keeps the audio thread alive; force exit

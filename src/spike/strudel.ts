@@ -64,3 +64,4 @@ console.log(`[strudel] scheduled ${scheduled} events`);
 await new Promise((r) => setTimeout(r, cycles * cycleDur * 1000 + 600));
 await ctx.close();
 console.log('Spike C complete: Strudel pattern -> superdough pipeline works.');
+process.exit(0); // node-web-audio-api keeps the audio thread alive; force exit

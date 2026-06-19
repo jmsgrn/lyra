@@ -46,3 +46,4 @@ await new Promise((r) => setTimeout(r, 2500));
 repl.stop();
 await closeNodeEngine();
 console.log('Spike F complete: record -> save -> register -> playback works.');
+process.exit(0); // node-web-audio-api keeps the audio thread alive; force exit

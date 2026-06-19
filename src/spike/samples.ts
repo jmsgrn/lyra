@@ -36,3 +36,4 @@ await new Promise((r) => setTimeout(r, 4000));
 repl.stop();
 await closeNodeEngine();
 console.log('Spike E complete: local sample loading + playback works.');
+process.exit(0); // node-web-audio-api keeps the audio thread alive; force exit
