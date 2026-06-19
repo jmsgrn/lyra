@@ -28,11 +28,16 @@ const cpsToBpm = (cps: number): number => cps * 60 * BEATS_PER_CYCLE;
 const bpmToCps = (bpm: number): number => bpm / (60 * BEATS_PER_CYCLE);
 const baseName = (p: string): string => p.split('/').pop() || p;
 
-const DEFAULT_CODE = `stack(
-  // clean tones — a good audio-quality test
-  note("c2 [eb2 g2] c2 g1").s("sine").gain(.55).release(.12),
-  note("<c4 eb4 g4 c5>").s("triangle").gain(.35).slow(2).release(.2),
-  note("<[c3,eb3,g3] [g2,bb2,d3]>").s("sawtooth").gain(.12).slow(2).cutoff(800).release(.5)
+const DEFAULT_CODE = `// lyra demo — same sound packs as strudel.cc (paste into strudel to compare)
+stack(
+  // TR-909 kit
+  s("bd*2, ~ sd, hh*8").bank("RolandTR909").gain(0.9),
+  // TR-808 clap + euclidean open hat, roomy
+  s("~ cp, oh(3,8)").bank("RolandTR808").gain(0.45).room(0.3),
+  // filtered saw bass with a slow LFO sweep
+  note("c2 [eb2 g2] c2 <g1 bb1>").s("sawtooth").lpf(sine.range(400, 1400).slow(8)).gain(0.55).release(0.12),
+  // drifting piano chords
+  note("<[c4,eb4,g4] [bb3,d4,f4] [ab3,c4,eb4] [g3,bb3,d4]>").s("piano").slow(2).gain(0.5).room(0.5).delay(0.25)
 )`;
 
 export interface AppProps {
