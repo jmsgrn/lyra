@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('lyra', {
   getInitial: () => ipcRenderer.invoke('lyra:getInitial'),
   readFile: (path) => ipcRenderer.invoke('lyra:readFile', path),
   writeFile: (path, content) => ipcRenderer.invoke('lyra:writeFile', path, content),
+  updateSettings: (patch) => ipcRenderer.invoke('lyra:updateSettings', patch),
   scanSamples: () => ipcRenderer.invoke('lyra:scanSamples'),
   saveRecording: (name, bytes) => ipcRenderer.invoke('lyra:saveRecording', name, bytes),
 });

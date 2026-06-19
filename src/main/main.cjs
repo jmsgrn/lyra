@@ -41,6 +41,18 @@ if (AUTOTEST) app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-r
 // `lyra [file]` — first non-flag arg opens that file.
 const fileArg = process.argv.slice(2).find((a) => !a.startsWith('-'));
 
+function isPlainObject(v) {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+function deepMerge(base, patch) {
+  if (!isPlainObject(base) || !isPlainObject(patch)) return patch === undefined ? base : patch;
+  const out = { ...base };
+  for (const [k, v] of Object.entries(patch)) {
+    out[k] = isPlainObject(base[k]) && isPlainObject(v) ? deepMerge(base[k], v) : v;
+  }
+  return out;
+}
+
 function readRawSettings() {
   try {
     return JSON.parse(readFileSync(SETTINGS_PATH, 'utf8'));
@@ -123,6 +135,18 @@ function setupIpc() {
       const target = resolve(path);
       mkdirSync(dirname(target), { recursive: true });
       writeFileSync(target, content);
+      return {};
+    } catch (err) {
+      return { error: String((err && err.message) || err) };
+    }
+  });
+
+  ipcMain.handle('lyra:updateSettings', (_e, patch) => {
+    try {
+      const current = isPlainObject(readRawSettings()) ? readRawSettings() : {};
+      const merged = deepMerge(current, patch);
+      mkdirSync(dirname(SETTINGS_PATH), { recursive: true });
+      writeFileSync(SETTINGS_PATH, `${JSON.stringify(merged, null, 2)}\n`);
       return {};
     } catch (err) {
       return { error: String((err && err.message) || err) };

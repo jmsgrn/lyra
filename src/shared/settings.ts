@@ -5,17 +5,7 @@
  * so the defaults live in exactly one place.
  */
 
-export interface ThemeSettings {
-  header: string;
-  editorActive: string;
-  command: string;
-  borderInactive: string;
-  muted: string;
-  key: string;
-  playing: string;
-  stopped: string;
-  error: string;
-}
+import { DEFAULT_THEME } from './themes.js';
 
 export interface AudioSettings {
   /** node-web-audio-api latency hint (ALSA backend). 'playback' avoids crunch. */
@@ -34,7 +24,8 @@ export interface AudioSettings {
 }
 
 export interface Settings {
-  theme: ThemeSettings;
+  /** name of a built-in theme (see src/shared/themes.ts) */
+  theme: string;
   /** transport defaults */
   tempo: { cps: number };
   audio: AudioSettings;
@@ -43,17 +34,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  theme: {
-    header: 'magenta',
-    editorActive: 'cyan',
-    command: 'yellow',
-    borderInactive: 'gray',
-    muted: 'gray',
-    key: 'cyan',
-    playing: 'green',
-    stopped: 'gray',
-    error: 'red',
-  },
+  theme: DEFAULT_THEME,
   tempo: { cps: 0.5 },
   audio: { latencyHint: 'playback', pipewireLatency: '1024/48000', worklets: true },
   samples: [],

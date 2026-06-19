@@ -12,11 +12,7 @@ import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { DEFAULT_SETTINGS, deepMerge, type Settings } from '../shared/settings.js';
 
-export type {
-  Settings,
-  ThemeSettings,
-  AudioSettings,
-} from '../shared/settings.js';
+export type { Settings, AudioSettings } from '../shared/settings.js';
 export { DEFAULT_SETTINGS } from '../shared/settings.js';
 
 const configHome = process.env.XDG_CONFIG_HOME || join(homedir(), '.config');

@@ -19,6 +19,8 @@ export interface LyraBridge {
   getInitial(): Promise<InitialState>;
   readFile(path: string): Promise<{ content?: string; error?: string }>;
   writeFile(path: string, content: string): Promise<{ error?: string }>;
+  /** deep-merge a patch into settings.json (e.g. { theme: 'midnight' }) */
+  updateSettings(patch: Record<string, unknown>): Promise<{ error?: string }>;
   scanSamples(): Promise<SamplePack[]>;
   saveRecording(
     name: string,

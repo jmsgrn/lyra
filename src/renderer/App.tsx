@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
 import { runCommand, type CommandContext } from '../shared/commands.js';
 import type { Settings } from '../shared/settings.js';
+import { resolveTheme, themeNames, type Theme } from '../shared/themes.js';
 import { Editor, type EditorHandle } from './Editor.js';
 import { CommandBar } from './CommandBar.js';
 import { useEngine } from './useEngine.js';
@@ -30,21 +31,37 @@ export interface AppProps {
 
 export function App({ initial, settings }: AppProps): ReactElement {
   const engine = useEngine(settings.tempo.cps);
+  const [theme, setThemeState] = useState<Theme>(() => resolveTheme(settings.theme));
 
-  // apply themeable colors as CSS variables
+  // drive the whole UI's CSS variables from the active theme
   useEffect(() => {
     const root = document.documentElement;
-    const t = settings.theme;
-    const set = (k: string, v?: string): void => {
-      if (v) root.style.setProperty(k, v);
-    };
-    set('--header', t.header);
-    set('--command', t.command);
-    set('--playing', t.playing);
-    set('--stopped', t.stopped);
-    set('--error', t.error);
-    set('--key', t.key);
-  }, [settings]);
+    const set = (k: string, v: string): void => root.style.setProperty(k, v);
+    const { accents: a, editor: e } = theme;
+    set('--bg', e.background);
+    set('--text', e.foreground);
+    set('--header', a.header);
+    set('--command', a.command);
+    set('--playing', a.playing);
+    set('--stopped', a.stopped);
+    set('--error', a.error);
+    set('--key', a.key);
+    set('--muted', a.muted);
+    set('--border', a.borderInactive);
+    set('--border-active', a.editorActive);
+  }, [theme]);
+
+  const applyTheme = useCallback(
+    (name: string): string => {
+      const names = themeNames();
+      if (!name) return `themes: ${names.join(', ')} · current: ${theme.name}`;
+      if (!names.includes(name)) return `unknown theme "${name}" — try: ${names.join(', ')}`;
+      setThemeState(resolveTheme(name));
+      void lyra.updateSettings({ theme: name });
+      return `theme: ${name}`;
+    },
+    [theme.name],
+  );
 
   // --- file / editor buffer state ---
   const [filePath, setFilePath] = useState<string | undefined>(initial.filePath);
@@ -153,6 +170,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
       return 'opening settings…';
     },
     record: () => 'recording lands in a later phase (Phase 4)',
+    setTheme: applyTheme,
     quit: () => window.close(),
   };
 
@@ -191,7 +209,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
         </div>
       </div>
 
-      <Editor key={docKey} ref={editorRef} docKey={docKey} initialDoc={seedDoc} onChange={onChange} />
+      <Editor key={docKey} ref={editorRef} docKey={docKey} theme={theme} initialDoc={seedDoc} onChange={onChange} />
 
       <CommandBar
         ref={commandInputRef}
