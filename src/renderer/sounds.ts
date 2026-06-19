@@ -44,3 +44,10 @@ export function soundSnippet(s: SoundInfo): string {
     ? `note("c3 e3 g3").s("${s.name}")`
     : `s("${s.name}")`;
 }
+
+/** The superdough value used to audition a sound (palette preview). */
+export function previewValue(s: SoundInfo): Record<string, unknown> {
+  return s.type === 'synth' || s.type === 'wavetable'
+    ? { s: s.name, note: 'c3' }
+    : { s: s.name };
+}

@@ -18,7 +18,8 @@ import { Editor, type EditorHandle } from './Editor.js';
 import { CommandBar } from './CommandBar.js';
 import { useVisuals } from './useVisuals.js';
 import { vizNames } from './visualizers.js';
-import { RightPanel, type RightTab } from './RightPanel.js';
+import { Palette, type PaletteTab } from './Palette.js';
+import { previewValue, type SoundInfo } from './sounds.js';
 import { useEngine } from './useEngine.js';
 import { lyra, type InitialState } from './ipc.js';
 
@@ -75,12 +76,20 @@ export function App({ initial, settings }: AppProps): ReactElement {
     [theme.name],
   );
 
-  // --- right panel: tabs (sounds | visualizer), resizable + collapsible ---
+  // --- palette: tabs (sounds | visualizer), resizable + collapsible ---
   const [vizId, setVizId] = useState('pianoroll');
-  const [rightTab, setRightTab] = useState<RightTab>('sounds');
+  const [paletteTab, setPaletteTab] = useState<PaletteTab>('sounds');
   const [panelOpen, setPanelOpen] = useState(true);
   const [panelWidth, setPanelWidth] = useState(380);
+  const [soundsFocusToken, setSoundsFocusToken] = useState(0);
   const vizCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // focus the palette (Ctrl+L): open it, show sounds, focus the search box
+  const focusPalette = useCallback(() => {
+    setPanelOpen(true);
+    setPaletteTab('sounds');
+    setSoundsFocusToken((t) => t + 1);
+  }, []);
 
   const applyViz = useCallback(
     (arg: string): string => {
@@ -96,7 +105,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
       }
       if (names.includes(name)) setVizId(name);
       setPanelOpen(true);
-      setRightTab('visualizer');
+      setPaletteTab('visualizer');
       return `viz: ${names.includes(name) ? name : vizId}`;
     },
     [vizId],
@@ -105,7 +114,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
   const cycleViz = useCallback(() => {
     const names = vizNames();
     setPanelOpen(true);
-    setRightTab('visualizer');
+    setPaletteTab('visualizer');
     setVizId((cur) => names[(names.indexOf(cur) + 1) % names.length] ?? cur);
   }, []);
 
@@ -172,8 +181,9 @@ export function App({ initial, settings }: AppProps): ReactElement {
   // hand focus back to the editor (Esc in the command bar)
   const focusEditor = useCallback(() => editorRef.current?.focus(), []);
 
-  // insert a sound snippet at the cursor (Sounds browser click)
+  // insert a sound snippet at the cursor; audition a sound (palette)
   const insertSound = useCallback((text: string) => editorRef.current?.insert(text), []);
+  const previewSound = useCallback((s: SoundInfo) => engine.preview(previewValue(s)), [engine]);
 
   // drag the splitter to resize the right panel
   const startResize = useCallback(
@@ -196,8 +206,8 @@ export function App({ initial, settings }: AppProps): ReactElement {
   // Global app chords — work regardless of which pane has focus, and
   // preventDefault beats Chromium's own Ctrl+P (print) / Ctrl+S (save page).
   // Latest callbacks via ref so we subscribe once.
-  const chords = useRef({ evaluate: engine.evaluate, save: saveFile, focusCommand, cycleViz, togglePanel });
-  chords.current = { evaluate: engine.evaluate, save: saveFile, focusCommand, cycleViz, togglePanel };
+  const chords = useRef({ evaluate: engine.evaluate, save: saveFile, focusCommand, focusPalette, cycleViz, togglePanel });
+  chords.current = { evaluate: engine.evaluate, save: saveFile, focusCommand, focusPalette, cycleViz, togglePanel };
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if (!(e.ctrlKey || e.metaKey)) return;
@@ -214,6 +224,9 @@ export function App({ initial, settings }: AppProps): ReactElement {
       } else if (k === 'p') {
         e.preventDefault();
         chords.current.focusCommand();
+      } else if (k === 'l') {
+        e.preventDefault();
+        chords.current.focusPalette();
       } else if (k === 'g') {
         e.preventDefault();
         chords.current.cycleViz();
@@ -232,7 +245,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
     canvasRef: vizCanvasRef,
     editorRef,
     vizId,
-    showViz: panelOpen && rightTab === 'visualizer',
+    showViz: panelOpen && paletteTab === 'visualizer',
     highlight: true,
     playing: engine.state.started === true,
     theme,
@@ -292,7 +305,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
             {engine.phase !== 'ready' ? ` · ${engine.phase}` : ''}
           </span>
           <span className="hints">
-            <b>Ctrl+E</b> eval · <b>Ctrl+S</b> save · <b>Ctrl+P</b> cmd · <b>Ctrl+G</b> viz · <b>Ctrl+Q</b> quit
+            <b>Ctrl+E</b> eval · <b>Ctrl+P</b> cmd · <b>Ctrl+L</b> palette · <b>Ctrl+G</b> viz · <b>Ctrl+B</b> panel
           </span>
         </div>
       </div>
@@ -302,14 +315,17 @@ export function App({ initial, settings }: AppProps): ReactElement {
         {panelOpen ? (
           <>
             <div className="splitter" onMouseDown={startResize} title="drag to resize" />
-            <RightPanel
-              tab={rightTab}
-              onTab={setRightTab}
+            <Palette
+              tab={paletteTab}
+              onTab={setPaletteTab}
               width={panelWidth}
               vizCanvasRef={vizCanvasRef}
               vizId={vizId}
               onCycleViz={cycleViz}
               onInsertSound={insertSound}
+              onPreviewSound={previewSound}
+              onEscape={focusEditor}
+              soundsFocusToken={soundsFocusToken}
             />
           </>
         ) : null}

@@ -35,6 +35,8 @@ export interface EngineApi {
   getAnalyser: () => AnalyserNode | undefined;
   /** audio-clock time, seconds */
   now: () => number;
+  /** audition a sound one-shot (palette preview), independent of the transport */
+  preview: (value: Record<string, unknown>) => void;
   /** the running pattern, queryable for pianoroll/highlight visuals */
   getPattern: () => unknown;
   /** transport position in cycles (pianoroll/highlight time base) */
@@ -188,6 +190,12 @@ export function useEngine(initialCps: number): EngineApi {
   const now = useCallback(() => ref.current?.now() ?? 0, []);
   const getPattern = useCallback(() => ref.current?.getPattern(), []);
   const nowCycles = useCallback(() => ref.current?.nowCycles() ?? 0, []);
+  const preview = useCallback((value: Record<string, unknown>) => {
+    const engine = ref.current;
+    if (!engine) return;
+    void engine.resume(); // audition is a user gesture → unlock audio
+    engine.preview(value);
+  }, []);
 
   return {
     phase,
@@ -203,6 +211,7 @@ export function useEngine(initialCps: number): EngineApi {
     setStatus,
     getAnalyser,
     now,
+    preview,
     getPattern,
     nowCycles,
     hapsRef,

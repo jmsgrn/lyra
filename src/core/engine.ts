@@ -72,6 +72,11 @@ export interface Engine {
   getPattern(): unknown;
   /** Current transport position in CYCLES — the pianoroll/highlight time base. */
   nowCycles(): number;
+  /**
+   * Trigger a one-shot of a sound for auditioning — fired directly at the
+   * current time, independent of the transport/running pattern.
+   */
+  preview(value: SoundParams, durationSec?: number): void;
   /** Register a superdough sample map (`{ name: ['file.wav'] }` or a json URL). */
   loadSamples(map: Record<string, unknown> | string, baseUrl?: string): Promise<void>;
   /** Silence sustained global effects (panic / hush helper). */
@@ -221,6 +226,15 @@ export async function createEngine(opts: CreateEngineOptions): Promise<Engine> {
         return Number.isFinite(n) ? n : 0;
       } catch {
         return 0;
+      }
+    },
+    preview: (value, durationSec = 0.7) => {
+      try {
+        void Promise.resolve(sdAny.superdough(value, now() + 0.05, durationSec, 1)).catch((err) =>
+          opts.onError?.(err),
+        );
+      } catch (err) {
+        opts.onError?.(err);
       }
     },
     loadSamples: (map, baseUrl) => sdAny.samples(map, baseUrl),

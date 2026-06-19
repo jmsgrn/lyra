@@ -64,9 +64,12 @@ npm run gui        # launch the desktop app
 In the app:
 
 - **Ctrl+E** (or **Ctrl+Enter**) — evaluate the buffer and hot-swap the pattern
-- **Ctrl+S** — save · **Ctrl+P** — focus the command bar · **Ctrl+Q** — quit
-- **Ctrl+G** — cycle the visualizer · **Ctrl+B** — toggle the right panel · **Tab** indents
+- **Ctrl+S** — save · **Ctrl+P** — focus the command line · **Ctrl+L** — focus the palette
+- **Ctrl+G** — cycle the visualizer · **Ctrl+B** — toggle the palette · **Ctrl+Q** — quit · **Tab** indents
 - Type a pattern, hit **Ctrl+E**, and it plays. Edit and re-evaluate to morph it live.
+
+The three focus regions are the **editor**, the **command line** (bottom), and the
+**palette** (right). Esc returns to the editor from either.
 
 ### Commands (command bar — Ctrl+P or click)
 
@@ -87,13 +90,16 @@ Strudel-style, frame-locked to the audio clock:
   around a playhead (Strudel's own `@strudel/draw`).
 - **scope / spectrum** — extra analyser visualizers.
 
-## Right panel (sounds + visuals)
+## Palette (sounds + visuals)
 
-A Strudel-style tabbed sidebar on the right, **resizable** (drag the splitter)
-and collapsible (**Ctrl+B**):
+The palette is the right-hand, tabbed pane — **resizable** (drag the splitter)
+and collapsible (**Ctrl+B**). Focus it with **Ctrl+L**.
 
 - **Sounds** — browse the registered sounds (synths + loaded sample packs / drum
-  machines), search them, and click to insert a snippet at the cursor.
+  machines). With the palette focused: type to **search**, **↑/↓** to select,
+  **Enter** to **audition** the selected sound, **Shift+Enter** to insert a
+  snippet at the cursor (**Esc** returns to the editor). Click a sound to
+  audition it; double-click to insert.
 - **Visualizer** — the pianoroll / punchcard / scope / spectrum pane. Cycle with
   **Ctrl+G**, the `/viz <name>` command, or by clicking the label.
 
