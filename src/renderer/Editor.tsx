@@ -31,6 +31,8 @@ export interface EditorHandle {
   focus(): void;
   /** flash the given character ranges as currently-sounding (Strudel highlight) */
   highlight(ranges: HighlightRange[]): void;
+  /** insert text at the cursor (replacing any selection) and focus */
+  insert(text: string): void;
 }
 
 // --- live-highlight extension (shared definitions) ---
@@ -65,6 +67,12 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(prop
     () => ({
       focus: () => viewRef.current?.focus(),
       highlight: (ranges) => viewRef.current?.dispatch({ effects: setHighlights.of(ranges) }),
+      insert: (text) => {
+        const view = viewRef.current;
+        if (!view) return;
+        view.dispatch(view.state.replaceSelection(text));
+        view.focus();
+      },
     }),
     [],
   );

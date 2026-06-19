@@ -65,7 +65,7 @@ In the app:
 
 - **Ctrl+E** (or **Ctrl+Enter**) — evaluate the buffer and hot-swap the pattern
 - **Ctrl+S** — save · **Ctrl+P** — focus the command bar · **Ctrl+Q** — quit
-- **Ctrl+G** — cycle the visualizer · **Tab** indents in the editor
+- **Ctrl+G** — cycle the visualizer · **Ctrl+B** — toggle the right panel · **Tab** indents
 - Type a pattern, hit **Ctrl+E**, and it plays. Edit and re-evaluate to morph it live.
 
 ### Commands (command bar — Ctrl+P or click)
@@ -87,9 +87,24 @@ Strudel-style, frame-locked to the audio clock:
   around a playhead (Strudel's own `@strudel/draw`).
 - **scope / spectrum** — extra analyser visualizers.
 
-Cycle the pane with **Ctrl+G**, the `/viz <name>` command, or by clicking the
-label; `/viz off` hides it (full-width editor). The visualizer set is a registry
-(`src/renderer/visualizers.ts`) — GPU/shader visualizers come next.
+## Right panel (sounds + visuals)
+
+A Strudel-style tabbed sidebar on the right, **resizable** (drag the splitter)
+and collapsible (**Ctrl+B**):
+
+- **Sounds** — browse the registered sounds (synths + loaded sample packs / drum
+  machines), search them, and click to insert a snippet at the cursor.
+- **Visualizer** — the pianoroll / punchcard / scope / spectrum pane. Cycle with
+  **Ctrl+G**, the `/viz <name>` command, or by clicking the label.
+
+## Sound library
+
+On launch lyra loads the same default sounds as strudel.cc (drum machines, the
+classic Dirt samples, piano, EmuSP12, VCSL, mridangam) from
+[felixroos/dough-samples], so `s("bd sd hh")`, `.bank("RolandTR909")`, and the
+synths all work out of the box. Loading is best-effort and online for now
+(offline = built-in synths only); local caching is on the roadmap. Add your own
+folders via `samples` in settings.
 
 ## Themes
 
@@ -148,9 +163,11 @@ via `audio.pipewireLatency` (default `1024/48000` ≈ 21 ms); raise it to
 - [x] Reusable platform-agnostic core (`src/core`) + node/browser bindings
 - [x] Desktop app (Electron): CodeMirror editor, transport, commands, file I/O, themes
 - [x] Visuals: live in-editor highlighting + pianoroll / punchcard (Strudel-style)
+- [x] Default sound library (Strudel's packs) + a searchable sounds browser
+- [x] Tabbed, resizable right panel (sounds + visuals)
 - [ ] WebGL shader / Hydra-style audio-reactive visuals
-- [ ] Default sound library (drum machines + sample packs) so `s("bd")` just works
-- [ ] Sample browser + project explorer
+- [ ] Local-first sample caching (bundle/cache packs for offline)
+- [ ] Project explorer
 - [ ] Recording (desktop) + audio/video export
 - [ ] Unified `lyra` launcher + packaged builds (Win/Mac/Linux)
 
@@ -175,3 +192,4 @@ local desktop shell around their engines.
 [superdough]: https://www.npmjs.com/package/superdough
 [TidalCycles]: https://tidalcycles.org
 [node-web-audio-api]: https://github.com/ircam-ismm/node-web-audio-api
+[felixroos/dough-samples]: https://github.com/felixroos/dough-samples

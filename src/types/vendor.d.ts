@@ -15,6 +15,13 @@ declare module 'superdough' {
   export function resetGlobalEffects(): void;
   export function samples(map: unknown, baseUrl?: string, options?: unknown): Promise<unknown>;
   export function superdough(value: unknown, deadline: number, duration: number, cps?: number): unknown;
+  export function registerZZFXSounds(): void;
+  /** nanostores map of registered sounds: name -> { onTrigger, data }. */
+  export const soundMap: {
+    get(): Record<string, { onTrigger?: unknown; data?: Record<string, unknown> }>;
+    subscribe(cb: (value: unknown) => void): () => void;
+    listen(cb: (value: unknown) => void): () => void;
+  };
   // Anything else superdough exports is reachable but untyped.
   const _superdough: Record<string, unknown>;
   export default _superdough;

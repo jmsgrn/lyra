@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 
 import { createBrowserEngine, type BrowserEngine } from '../platform/browser.js';
 import type { EngineEvent, ReplState } from '../core/types.js';
 import { lyra } from './ipc.js';
+import { loadDefaultSounds } from './prebake.js';
 
 const MAX_HAPS = 256; // recent events kept for visualizers
 
@@ -74,6 +75,9 @@ export function useEngine(initialCps: number): EngineApi {
         });
         setPhase('ready');
         setStatus('ready');
+        // default sound library (drum machines, dirt samples, …) — best-effort,
+        // non-blocking (offline just means synths only).
+        void loadDefaultSounds((url) => engine.loadSamples(url));
         // best-effort: auto-load configured sample folders + recordings
         try {
           for (const pack of await lyra.scanSamples()) {

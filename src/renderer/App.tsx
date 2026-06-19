@@ -3,7 +3,14 @@
  * command/status bar. Ports the TUI App's orchestration (file open/save, dirty
  * tracking, slash-command dispatch via the shared runCommand) to the desktop.
  */
-import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactElement,
+  type MouseEvent as ReactMouseEvent,
+} from 'react';
 import { runCommand, type CommandContext } from '../shared/commands.js';
 import type { Settings } from '../shared/settings.js';
 import { resolveTheme, themeNames, type Theme } from '../shared/themes.js';
@@ -11,6 +18,7 @@ import { Editor, type EditorHandle } from './Editor.js';
 import { CommandBar } from './CommandBar.js';
 import { useVisuals } from './useVisuals.js';
 import { vizNames } from './visualizers.js';
+import { RightPanel, type RightTab } from './RightPanel.js';
 import { useEngine } from './useEngine.js';
 import { lyra, type InitialState } from './ipc.js';
 
@@ -67,37 +75,41 @@ export function App({ initial, settings }: AppProps): ReactElement {
     [theme.name],
   );
 
-  // --- visualizer ---
+  // --- right panel: tabs (sounds | visualizer), resizable + collapsible ---
   const [vizId, setVizId] = useState('pianoroll');
-  const [showViz, setShowViz] = useState(true);
+  const [rightTab, setRightTab] = useState<RightTab>('sounds');
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelWidth, setPanelWidth] = useState(380);
   const vizCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const applyViz = useCallback(
     (arg: string): string => {
       const names = vizNames();
       const name = arg.toLowerCase();
-      if (!name) return `viz: ${names.join(', ')} · current: ${showViz ? vizId : 'off'} (off to hide)`;
+      if (!name) return `viz: ${names.join(', ')} · current: ${vizId}`;
       if (name === 'off' || name === 'hide' || name === 'none') {
-        setShowViz(false);
-        return 'viz: off';
+        setPanelOpen(false);
+        return 'panel: hidden';
       }
-      if (name === 'on' || name === 'show') {
-        setShowViz(true);
-        return `viz: ${vizId}`;
+      if (!['on', 'show'].includes(name) && !names.includes(name)) {
+        return `unknown viz "${name}" — try: ${names.join(', ')}, off`;
       }
-      if (!names.includes(name)) return `unknown viz "${name}" — try: ${names.join(', ')}, off`;
-      setVizId(name);
-      setShowViz(true);
-      return `viz: ${name}`;
+      if (names.includes(name)) setVizId(name);
+      setPanelOpen(true);
+      setRightTab('visualizer');
+      return `viz: ${names.includes(name) ? name : vizId}`;
     },
-    [showViz, vizId],
+    [vizId],
   );
 
   const cycleViz = useCallback(() => {
     const names = vizNames();
-    setShowViz(true);
+    setPanelOpen(true);
+    setRightTab('visualizer');
     setVizId((cur) => names[(names.indexOf(cur) + 1) % names.length] ?? cur);
   }, []);
+
+  const togglePanel = useCallback(() => setPanelOpen((o) => !o), []);
 
   // --- file / editor buffer state ---
   const [filePath, setFilePath] = useState<string | undefined>(initial.filePath);
@@ -160,11 +172,32 @@ export function App({ initial, settings }: AppProps): ReactElement {
   // hand focus back to the editor (Esc in the command bar)
   const focusEditor = useCallback(() => editorRef.current?.focus(), []);
 
+  // insert a sound snippet at the cursor (Sounds browser click)
+  const insertSound = useCallback((text: string) => editorRef.current?.insert(text), []);
+
+  // drag the splitter to resize the right panel
+  const startResize = useCallback(
+    (e: ReactMouseEvent): void => {
+      e.preventDefault();
+      const startX = e.clientX;
+      const startW = panelWidth;
+      const onMove = (ev: MouseEvent): void =>
+        setPanelWidth(Math.max(220, Math.min(760, startW + (startX - ev.clientX))));
+      const onUp = (): void => {
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      };
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    },
+    [panelWidth],
+  );
+
   // Global app chords — work regardless of which pane has focus, and
   // preventDefault beats Chromium's own Ctrl+P (print) / Ctrl+S (save page).
   // Latest callbacks via ref so we subscribe once.
-  const chords = useRef({ evaluate: engine.evaluate, save: saveFile, focusCommand, cycleViz });
-  chords.current = { evaluate: engine.evaluate, save: saveFile, focusCommand, cycleViz };
+  const chords = useRef({ evaluate: engine.evaluate, save: saveFile, focusCommand, cycleViz, togglePanel });
+  chords.current = { evaluate: engine.evaluate, save: saveFile, focusCommand, cycleViz, togglePanel };
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if (!(e.ctrlKey || e.metaKey)) return;
@@ -184,6 +217,9 @@ export function App({ initial, settings }: AppProps): ReactElement {
       } else if (k === 'g') {
         e.preventDefault();
         chords.current.cycleViz();
+      } else if (k === 'b') {
+        e.preventDefault();
+        chords.current.togglePanel();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -196,7 +232,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
     canvasRef: vizCanvasRef,
     editorRef,
     vizId,
-    showViz,
+    showViz: panelOpen && rightTab === 'visualizer',
     highlight: true,
     playing: engine.state.started === true,
     theme,
@@ -263,13 +299,19 @@ export function App({ initial, settings }: AppProps): ReactElement {
 
       <div className="workspace">
         <Editor key={docKey} ref={editorRef} docKey={docKey} theme={theme} initialDoc={seedDoc} onChange={onChange} />
-        {showViz ? (
-          <div className="viz-wrap">
-            <canvas ref={vizCanvasRef} className="viz-canvas" />
-            <span className="viz-label" onClick={cycleViz} title="cycle visualizer">
-              {vizId} ▸
-            </span>
-          </div>
+        {panelOpen ? (
+          <>
+            <div className="splitter" onMouseDown={startResize} title="drag to resize" />
+            <RightPanel
+              tab={rightTab}
+              onTab={setRightTab}
+              width={panelWidth}
+              vizCanvasRef={vizCanvasRef}
+              vizId={vizId}
+              onCycleViz={cycleViz}
+              onInsertSound={insertSound}
+            />
+          </>
         ) : null}
       </div>
 
