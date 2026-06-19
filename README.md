@@ -89,6 +89,11 @@ Strudel-style, frame-locked to the audio clock:
 - **Pianoroll / punchcard** — the right-hand pane scrolls the pattern's notes
   around a playhead (Strudel's own `@strudel/draw`).
 - **scope / spectrum** — extra analyser visualizers.
+- **Inline visuals** — attach a draw method to a pattern and it renders as a
+  block **right after that line**, with code flowing below: `._pianoroll()`,
+  `._punchcard()`, `._spiral()`, `._scope()`, `._wordfall()`, `._pitchwheel()`,
+  e.g. `s("bd sd, hh*8")._punchcard()`. Set the block height with
+  `"inlineVizHeight"` (px) in settings.json.
 
 ## Palette (sounds + visuals)
 

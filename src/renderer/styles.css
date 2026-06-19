@@ -65,6 +65,20 @@ body {
   overflow: hidden;
 }
 
+/* inline visual block (a CodeMirror block widget after a ._pianoroll()/… call) */
+.inline-viz {
+  height: var(--inline-viz-height, 64px);
+  margin: 2px 0 2px 2.5em; /* indent past the gutter */
+  border-radius: 6px;
+  overflow: hidden;
+  background: #00000033;
+}
+.inline-viz-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 /* resize splitter */
 .splitter {
   flex: 0 0 6px;

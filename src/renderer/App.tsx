@@ -69,6 +69,11 @@ export function App({ initial, settings }: AppProps): ReactElement {
     set('--hl', `${a.editorActive}55`);
   }, [theme]);
 
+  // inline-visual block height (settings)
+  useEffect(() => {
+    document.documentElement.style.setProperty('--inline-viz-height', `${settings.inlineVizHeight}px`);
+  }, [settings.inlineVizHeight]);
+
   const applyTheme = useCallback(
     (name: string): string => {
       const names = themeNames();
@@ -88,6 +93,16 @@ export function App({ initial, settings }: AppProps): ReactElement {
   const [panelWidth, setPanelWidth] = useState(380);
   const [soundsFocusToken, setSoundsFocusToken] = useState(0);
   const vizCanvasRef = useRef<HTMLCanvasElement>(null);
+  // The inline-viz canvas (#test-canvas, getDrawContext's target). Created
+  // imperatively so the editor can host it as a block widget after the
+  // ._pianoroll()/.scope()/… call; useVisuals draws the painters to it.
+  const inlineCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  if (!inlineCanvasRef.current && typeof document !== 'undefined') {
+    const c = document.createElement('canvas');
+    c.id = 'test-canvas';
+    c.className = 'inline-viz-canvas';
+    inlineCanvasRef.current = c;
+  }
 
   // focus the palette (Ctrl+P): open it, show sounds, focus the search box
   const focusPalette = useCallback(() => {
@@ -248,6 +263,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
   useVisuals({
     engine,
     canvasRef: vizCanvasRef,
+    inlineCanvasRef,
     editorRef,
     vizId,
     showViz: panelOpen && paletteTab === 'visualizer',
@@ -316,7 +332,15 @@ export function App({ initial, settings }: AppProps): ReactElement {
       </div>
 
       <div className="workspace">
-        <Editor key={docKey} ref={editorRef} docKey={docKey} theme={theme} initialDoc={seedDoc} onChange={onChange} />
+        <Editor
+          key={docKey}
+          ref={editorRef}
+          docKey={docKey}
+          theme={theme}
+          initialDoc={seedDoc}
+          onChange={onChange}
+          inlineCanvas={inlineCanvasRef.current}
+        />
         {panelOpen ? (
           <>
             <div className="splitter" onMouseDown={startResize} title="drag to resize" />

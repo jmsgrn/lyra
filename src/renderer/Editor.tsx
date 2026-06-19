@@ -7,8 +7,8 @@
  */
 import { forwardRef, useEffect, useImperativeHandle, useRef, type ReactElement } from 'react';
 import { EditorView, basicSetup } from 'codemirror';
-import { keymap, Decoration, type DecorationSet } from '@codemirror/view';
-import { Compartment, StateEffect, StateField } from '@codemirror/state';
+import { keymap, Decoration, WidgetType, type DecorationSet } from '@codemirror/view';
+import { Compartment, StateEffect, StateField, type EditorState, type Extension } from '@codemirror/state';
 import { indentWithTab } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import { cmTheme } from './cmTheme.js';
@@ -25,6 +25,8 @@ export interface EditorProps {
   docKey: number;
   theme: Theme;
   onChange: (code: string) => void;
+  /** canvas hosted as a block widget after an inline ._pianoroll()/… call */
+  inlineCanvas?: HTMLCanvasElement | null;
 }
 
 export interface EditorHandle {
@@ -56,6 +58,44 @@ const highlightField = StateField.define<DecorationSet>({
   },
   provide: (f) => EditorView.decorations.from(f),
 });
+
+// --- inline visuals: a block widget hosting the viz canvas right after the
+// line that calls ._pianoroll()/.scope()/… so code flows below it ---
+const VIZ_CALL = /\b_?(?:pianoroll|punchcard|spiral|scope|wordfall|pitchwheel)\s*\(/;
+
+class InlineVizWidget extends WidgetType {
+  constructor(readonly canvas: HTMLCanvasElement) {
+    super();
+  }
+  eq(other: InlineVizWidget): boolean {
+    return other.canvas === this.canvas;
+  }
+  toDOM(): HTMLElement {
+    const wrap = document.createElement('div');
+    wrap.className = 'inline-viz';
+    wrap.appendChild(this.canvas);
+    return wrap;
+  }
+  ignoreEvent(): boolean {
+    return false;
+  }
+}
+
+function inlineVizField(canvas: HTMLCanvasElement): Extension {
+  const build = (state: EditorState): DecorationSet => {
+    const m = VIZ_CALL.exec(state.doc.toString());
+    if (!m) return Decoration.none;
+    const line = state.doc.lineAt(m.index);
+    return Decoration.set([
+      Decoration.widget({ widget: new InlineVizWidget(canvas), block: true, side: 1 }).range(line.to),
+    ]);
+  };
+  return StateField.define<DecorationSet>({
+    create: build,
+    update: (deco, tr) => (tr.docChanged ? build(tr.state) : deco),
+    provide: (f) => EditorView.decorations.from(f),
+  });
+}
 
 export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(props, ref): ReactElement {
   const parentRef = useRef<HTMLDivElement>(null);
@@ -91,6 +131,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(prop
         javascript(),
         keymap.of([indentWithTab]),
         highlightField,
+        ...(props.inlineCanvas ? [inlineVizField(props.inlineCanvas)] : []),
         EditorView.updateListener.of((u) => {
           if (u.docChanged) onChangeRef.current(u.state.doc.toString());
         }),

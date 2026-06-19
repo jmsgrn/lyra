@@ -31,6 +31,8 @@ export interface Settings {
   audio: AudioSettings;
   /** sample sources to auto-load on startup: directories, or strudel.json paths/URLs */
   samples: string[];
+  /** height (px) of an inline visual (._pianoroll()/._scope()/…) in the editor */
+  inlineVizHeight: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -38,6 +40,7 @@ export const DEFAULT_SETTINGS: Settings = {
   tempo: { cps: 0.5 },
   audio: { latencyHint: 'playback', pipewireLatency: '1024/48000', worklets: true },
   samples: [],
+  inlineVizHeight: 64,
 };
 
 export function isPlainObject(v: unknown): v is Record<string, unknown> {
