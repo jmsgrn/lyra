@@ -21,7 +21,7 @@ export interface PaletteProps {
   onInsertSound: (text: string) => void;
   onPreviewSound: (s: SoundInfo) => void;
   onEscape: () => void;
-  /** bump to focus the sounds search (Ctrl+L) */
+  /** bump to focus the sounds search (Ctrl+P) */
   soundsFocusToken: number;
 }
 

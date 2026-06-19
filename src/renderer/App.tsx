@@ -84,7 +84,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
   const [soundsFocusToken, setSoundsFocusToken] = useState(0);
   const vizCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  // focus the palette (Ctrl+L): open it, show sounds, focus the search box
+  // focus the palette (Ctrl+P): open it, show sounds, focus the search box
   const focusPalette = useCallback(() => {
     setPanelOpen(true);
     setPaletteTab('sounds');
@@ -174,7 +174,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
     [filePath],
   );
 
-  // focus the command bar (Ctrl+P); the input's onFocus flips `active`
+  // focus the command bar (Ctrl+M); the input's onFocus flips `active`
   const focusCommand = useCallback(() => {
     requestAnimationFrame(() => commandInputRef.current?.focus());
   }, []);
@@ -221,10 +221,10 @@ export function App({ initial, settings }: AppProps): ReactElement {
       } else if (k === 's') {
         e.preventDefault();
         void chords.current.save();
-      } else if (k === 'p') {
+      } else if (k === 'm') {
         e.preventDefault();
         chords.current.focusCommand();
-      } else if (k === 'l') {
+      } else if (k === 'p') {
         e.preventDefault();
         chords.current.focusPalette();
       } else if (k === 'g') {
@@ -305,7 +305,7 @@ export function App({ initial, settings }: AppProps): ReactElement {
             {engine.phase !== 'ready' ? ` · ${engine.phase}` : ''}
           </span>
           <span className="hints">
-            <b>Ctrl+E</b> eval · <b>Ctrl+P</b> cmd · <b>Ctrl+L</b> palette · <b>Ctrl+G</b> viz · <b>Ctrl+B</b> panel
+            <b>Ctrl+E</b> eval · <b>Ctrl+M</b> cmd · <b>Ctrl+P</b> palette · <b>Ctrl+G</b> viz · <b>Ctrl+B</b> panel
           </span>
         </div>
       </div>

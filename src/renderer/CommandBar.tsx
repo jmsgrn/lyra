@@ -1,6 +1,6 @@
 /**
  * Bottom command/status bar. Runs slash commands (shared with the TUI) and
- * shows the latest status/result. Focus with Ctrl+P (or click); Esc returns
+ * shows the latest status/result. Focus with Ctrl+M (or click); Esc returns
  * focus to the editor. `active` tracks the input's real focus so the highlight
  * clears when you click away.
  */
@@ -29,7 +29,7 @@ export const CommandBar = forwardRef<HTMLInputElement, CommandBarProps>(function
         ref={ref}
         value={text}
         spellCheck={false}
-        placeholder={message || 'Ctrl+P for commands · /help'}
+        placeholder={message || 'Ctrl+M for commands · /help'}
         onChange={(e) => setText(e.target.value)}
         onFocus={() => onActiveChange(true)}
         onBlur={() => onActiveChange(false)}

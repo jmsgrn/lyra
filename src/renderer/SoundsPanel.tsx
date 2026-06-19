@@ -1,6 +1,6 @@
 /**
  * Sounds browser (the Sounds tab of the palette). Search + arrow-key navigation
- * + audition: focus it (Ctrl+L), type to filter, ↑/↓ to select, Enter to play a
+ * + audition: focus it (Ctrl+P), type to filter, ↑/↓ to select, Enter to play a
  * demo of the selected sound, Esc to return to the editor. Click a sound to
  * audition it; double-click (or Shift+Enter) to insert a snippet at the cursor.
  */
@@ -47,7 +47,7 @@ export function SoundsPanel({ onInsert, onPreview, onEscape, focusToken }: Sound
     return subscribeSounds(update);
   }, []);
 
-  // focus the search box when the palette is focused (Ctrl+L)
+  // focus the search box when the palette is focused (Ctrl+P)
   useEffect(() => {
     if (focusToken > 0) {
       inputRef.current?.focus();

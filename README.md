@@ -64,14 +64,14 @@ npm run gui        # launch the desktop app
 In the app:
 
 - **Ctrl+E** (or **Ctrl+Enter**) — evaluate the buffer and hot-swap the pattern
-- **Ctrl+S** — save · **Ctrl+P** — focus the command line · **Ctrl+L** — focus the palette
+- **Ctrl+S** — save · **Ctrl+M** — focus the command line · **Ctrl+P** — focus the palette
 - **Ctrl+G** — cycle the visualizer · **Ctrl+B** — toggle the palette · **Ctrl+Q** — quit · **Tab** indents
 - Type a pattern, hit **Ctrl+E**, and it plays. Edit and re-evaluate to morph it live.
 
 The three focus regions are the **editor**, the **command line** (bottom), and the
 **palette** (right). Esc returns to the editor from either.
 
-### Commands (command bar — Ctrl+P or click)
+### Commands (command bar — Ctrl+M or click)
 
 ```
 /play  /stop  /bpm <n>  /cps <n>  /open <file>  /save  /theme <name>
@@ -93,7 +93,7 @@ Strudel-style, frame-locked to the audio clock:
 ## Palette (sounds + visuals)
 
 The palette is the right-hand, tabbed pane — **resizable** (drag the splitter)
-and collapsible (**Ctrl+B**). Focus it with **Ctrl+L**.
+and collapsible (**Ctrl+B**). Focus it with **Ctrl+P**.
 
 - **Sounds** — browse the registered sounds (synths + loaded sample packs / drum
   machines). With the palette focused: type to **search**, **↑/↓** to select,
