@@ -73,14 +73,66 @@ In the app:
 The three focus regions are the **editor**, the **command line** (bottom), and the
 **palette** (right). Esc returns to the editor from either.
 
-### Commands (command bar — Ctrl+M or click)
+## Making music
 
-```
-/play  /stop  /bpm <n>  /cps <n>  /open <file>  /save  /theme <name>
-/viz <name|off>  /settings  /rec <name>  /help
-```
+lyra speaks [Strudel]'s language, so anything from Strudel works here. The gist:
 
-A leading `/` is optional. `/theme` and `/viz` with no name list the options.
+1. **Make a sound.** `s(...)` plays samples / drum machines; `note(...)` plays
+   pitches on a synth or instrument:
+
+   ```js
+   s("bd hh sd hh")              // a drum sequence
+   note("c e g b").s("piano")    // notes on the piano
+   ```
+
+2. **Mini-notation** (inside the quotes) arranges events in time:
+
+   ```text
+   "bd sd"      two events across the cycle      "bd*4"     four times as fast
+   "bd ~ sd"    ~ is a rest                       "<a b>"    alternate each cycle
+   "[bd sd]*2"  [] groups, repeated twice         "bd, hh*8" , stacks layers
+   "bd(3,8)"    euclidean rhythm
+   ```
+
+3. **Layer + shape.** Stack patterns and chain methods:
+
+   ```js
+   stack(
+     s("bd*2, ~ sd, hh*8").bank("RolandTR909"),    // a 909 kit
+     note("c2 eb2 g2 c2").s("sawtooth").lpf(800)   // a filtered bass
+   )
+   ```
+
+   Handy methods: `.gain()` · `.lpf()`/`.cutoff()` · `.room()` (reverb) ·
+   `.delay()` · `.release()` · `.bank("<drum machine>")` · `.slow(n)`/`.fast(n)` ·
+   `.rev` · `.every(n, fn)`.
+
+4. **Play it.** Hit **Ctrl+E** to evaluate — the pattern starts (or hot-swaps the
+   running one). Edit and Ctrl+E again to morph it live; `/stop` stops.
+
+5. **Find sounds.** **Ctrl+P** opens the palette — search (`tr909`, `piano`,
+   `cp`, …), **↑/↓** to browse, **Enter** to audition, **Shift+Enter** to insert.
+
+6. **See it.** Append an inline visual: `s("bd sd, hh*8")._punchcard()`.
+
+New to Strudel? The [workshop](https://strudel.cc/workshop/getting-started/) and
+[function reference](https://strudel.cc/learn/) are the best next step — the
+language is identical.
+
+## Commands
+
+Run these from the command line (**Ctrl+M** or click it). A leading `/` is optional.
+
+| Command | What it does |
+| --- | --- |
+| `/play` · `/stop` | start / stop the transport (`/hush` also stops) |
+| `/bpm <n>` · `/cps <n>` | set tempo (beats-per-minute, or cycles-per-second) |
+| `/theme <name>` | switch theme — no name lists them (also `settings.json`) |
+| `/viz <name\|off>` | switch / hide the palette visualizer — no name lists them |
+| `/open <file>` · `/save [file]` | open / save a `.lyra` file |
+| `/settings` | open `settings.json` in the editor |
+| `/rec <name>` | record from the mic (terminal UI only for now) |
+| `/help` | list the commands |
 
 ## Visuals
 
