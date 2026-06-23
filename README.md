@@ -10,6 +10,8 @@ native desktop app on your machine. No browser tab, no server.
 > audiovisual instrument (audio-reactive visuals, recording, AV export) — see
 > [Roadmap](#roadmap). A legacy terminal UI also still ships.
 
+![lyra — the CodeMirror editor with an inline punchcard visual, the sounds palette, and live transport](docs/screenshot.png)
+
 ## Why
 
 [Strudel] is a wonderful, browser-based port of [TidalCycles]. lyra keeps
